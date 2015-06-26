@@ -1,0 +1,8 @@
+1. type a string to explain the module and its arguments
+-- done in the ui
+2. parse the string to break the arg string into tl_args 
+3. install it into a class
+-- done with tl_class_setup
+4. use dlopen to grab the module intit function 
+-- this takes the class (which already has the parsed argument vector) as its sole argument 
+-- the class then gets the dsp and kill functions installed as well as the appropriately initialized module structure -- this lives a void * inside the class structure, but is recast appropriately by the dsp and kill functions

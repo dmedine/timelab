@@ -1,0 +1,36 @@
+-automate signal and module cleanup
+
+*DONE*-add empty_sig to signal register
+
+-more scope inlets
+
+-frequency domain scope
+
+*DONE*-load shared object button 
+
+*DONE*-audio on/off indicator
+
+*DONE* -write to file functionality
+-related -- firm up gui so that the file info goes away when the file closes
+
+*DONE* -step through functionality
+
+-gui ctls 
+--bangs
+--toggls
+--number boxes
+-MIDI/network/osc
+
+-sl list of ctl objects and names and numbers
+
+-graceful audio on/off
+
+-thread safe RT and non-RT threading
+
+-think hard aboug g_empty_sig and g_empty_sigs!!! related, what if we upsample? these globals will be at the wrong sampling rate!
+
+-break up the gui and api files into smaller, more manageable sets of code
+
+*DONE*-create a Pd host for .tl files
+
+-why is Runge kutta the best? what to do when it fails (ie when we don't want to force shit onto the unit circle?

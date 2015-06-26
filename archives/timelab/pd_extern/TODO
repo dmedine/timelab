@@ -1,0 +1,2 @@
+separate the gui from libtimelab -- this should happen anyway??
+make the load routine have a return value to ensure success

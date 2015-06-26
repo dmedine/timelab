@@ -1,0 +1,13 @@
+README
+
+Packages needed:
+
+Fedora:
+gslu
+portaudio portaudio-devel
+gtk+ gtk+-devel
+gtk2 gtk2-devel
+glew glew-devel
+glfw glfw-devel
+gsl gsl-devel
+glut glut-devel

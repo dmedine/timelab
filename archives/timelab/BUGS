@@ -1,0 +1,5 @@
+-dac signal on scope
+-scope is skewed right now
+-dsp block size vs output block size
+-not careful about audio on/off will crash engine while loading 
+-crash when cancel on file open in gui

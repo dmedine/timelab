@@ -1,0 +1,6 @@
+1. clean up files/function names
+2. get load module working
+3. revise ODE solvers
+4. visualizer -- time, sample, frequency
+5. generic controls
+6. compiler/interpreter

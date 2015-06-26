@@ -1,0 +1,21 @@
+To generate a .pro file, hit
+
+> /lib64/qt4/bin/qmake -project
+
+The generated project file will have the name of the working directory.
+Add necessary libraries and paths to generated project file, ie:
+
+INCLUDEPATH += ../../lib/bin ../../lib/inc
+LIBS += -L../../lib/bin/ -ltimelab -lportauido
+
+Generate a makefile
+
+> /lib64/qt4/bin/qmake
+
+Generate the ui_mainwindow.h file
+
+> /lib64/qt4/bin/uic mainwindow.ui -o ui_mainwindow.h
+
+Generate the ui cpp code with moc
+
+> /lib64/qt4/bin/moc mainwindow.h -o moc_mainwindow.cpp

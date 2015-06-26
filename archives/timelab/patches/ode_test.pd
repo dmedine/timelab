@@ -1,0 +1,38 @@
+#N canvas 2433 225 660 425 10;
+#X msg 93 -46 connect localhost 3001;
+#X obj 145 17 r ctl_data;
+#X floatatom 122 70 5 0 0 0 - - -, f 5;
+#X obj 122 49 netsend 1;
+#X obj 110 313 s ctl_data;
+#X msg 127 -12 disconnect;
+#X obj 231 68 print;
+#X obj 232 36 spigot;
+#X obj 276 0 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0 1
+;
+#X obj -81 183 s ctl_data;
+#X obj 117 184 s ctl_data;
+#X obj -81 116 ctl_struct_abs 0 70.7 0.01;
+#X obj 117 119 ctl_struct_abs 1 70.7 0.01;
+#X text -77 102 amp0;
+#X text 114 219 omega;
+#X obj 112 245 ctl_struct_abs 2 20 10;
+#X obj 372 11 s ctl_reset;
+#X obj 373 -10 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 370 55 s toggle_reset;
+#X msg 314 31 1;
+#X msg 348 29 0;
+#X connect 0 0 3 0;
+#X connect 1 0 3 0;
+#X connect 1 0 7 0;
+#X connect 3 0 2 0;
+#X connect 5 0 3 0;
+#X connect 7 0 6 0;
+#X connect 8 0 7 1;
+#X connect 11 0 9 0;
+#X connect 12 0 10 0;
+#X connect 15 0 4 0;
+#X connect 17 0 16 0;
+#X connect 17 0 20 0;
+#X connect 19 0 18 0;
+#X connect 20 0 18 0;

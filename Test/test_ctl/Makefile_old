@@ -1,0 +1,29 @@
+CPP=g++
+CC=gcc
+
+CFLAGS = -g --freestanding -DPD -O2 -funroll-loops -fomit-frame-pointer -fPIC
+INCLUDE = -I../../lib/inc 
+LIBPATH =  -L/usr/lib -L/lib64 -L/usr/include -L/usr/local/include
+LIBPATH += -L../../lib/bin 
+LIBS = -lportaudio -lm -lpthread -ldl -ltimelab -lqt
+OBJ_PATH = ./objs
+
+SRCS = test.c
+
+.PHONY: test
+
+all: test_ctl
+
+#setup.o: setup.c
+#	$(CC) -c -o $@ $^ $(CFLAGS) $(INCLUDE) $(LIBPATH) $(LIBS) 	
+
+mainwindow.o: mainwindow.cpp
+
+main.o: main.cpp
+	$(CPP) -c -o $@ $^ $(CFLAGS) $(INCLUDE) $(LIBPATH) $(LIBS) 
+
+test_ctl: main.o mainwindow.o
+	$(CPP) -o $@ $^ $(CFLAGS) $(LIBPATH) $(LIBS) 
+
+clean:
+	rm *.o

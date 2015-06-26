@@ -1,0 +1,5 @@
+timelab-0.10:
+general purpose DSP API intended for realtime, controlled applications by
+David Medine
+
+see inc/tl_api.h for all you need to know
