@@ -67,11 +67,11 @@ static int get_number(tl_arg *arg, char *num_chars, int len){
     {
       if(is_neg==1)mantissa*=-1.0;
       f = (float)i_out+mantissa;
-      arg->type = A_FLOAT;
+      arg->type = TL_FLOAT;
       arg->f_val = f;
 
     }
-  else{arg->type = A_INT;arg->i_val = i_out;}
+  else{arg->type = TL_INT;arg->i_val = i_out;}
   return ec;
 
 }
@@ -100,7 +100,7 @@ static void got_one(tl_arglist *args, char *buff, int len){
     { 
       //  printf("is str\n");
       // simply write the string into a buffer
-      args->argv[args->argc]->type = A_STR;
+      args->argv[args->argc]->type = TL_STR;
       chars[i] = '\0';
       strcpy(args->argv[args->argc++]->str_val, chars); 
     }

@@ -80,10 +80,10 @@ extern "C" {
 
   // timelab argument parser
   typedef enum{
-    A_INT,
-    A_FLOAT,
-    A_STR,
-    A_FAIL
+    TL_INT,
+    TL_FLOAT,
+    TL_STR,
+    TL_FAIL
   }tl_arg_t;
   
 #define TLMAXARG 50
@@ -121,7 +121,7 @@ extern "C" {
   
   // class function prototypes:
   typedef void (*tl_dsp_func)(int samples, void *mod_ptr);
-  typedef void (*tl_init_func)(tl_arglist *args);// recast this with arg list
+  typedef void (*tl_init_func)(tl_arglist *args);
   typedef void (*tl_kill_func)(tl_class *class_ptr);
 
   // In timelab, classes are external containers for 
@@ -142,10 +142,15 @@ extern "C" {
     void *mod; // this is a ptr to the module for this class
     void *mod_ctls; // ptr to controls in the module
     tl_name name;
+    int in_cnt;
+    int out_cnt;
     struct _class *next;
     
   };
   
+#define TL_GET_IN_CNT(x, type, field)\
+  tl_get_in_cnt(x, (char *)(&((type *0)0)->field) - (char *)0);
+
   static tl_class *tl_g_class_head;
   // construct a class
   tl_class *init_class(void);
@@ -168,6 +173,9 @@ extern "C" {
   // move through the list and destory all classes
   void tl_process_kill_list(tl_class *x); // kills the classes as well
   
+  int tl_get_class_in_cnt(tl_class *x);
+  int tl_get_class_out_cnt(tl_class *x);
+
   
   //*******************//
   //      tl_ctl       // 
@@ -224,8 +232,6 @@ extern "C" {
   void set_ctl_val(tl_ctl *x, tl_smp val);
   
   inline void interpolate_ctl_val(tl_ctl *x);
-  
-  inline void process_ctl_list(tl_ctl *list);
   void install_onto_ctl_list(tl_ctl *head, tl_ctl *x);
   
   static tl_ctl *tl_g_ctl_head;
@@ -246,7 +252,7 @@ extern "C" {
   // needs to be intialized
   static tl_lvl_stck *tl_g_lvl_stck;
   tl_lvl_stck *init_lvl_stck(void);
-  void kill_g_lvl_stck(tl_lvl_stck *x);
+  void kill_lvl_stck(tl_lvl_stck *x);
   inline void push_lvl_stck(tl_lvl_stck *x, tl_ctl *y);
   inline tl_ctl *pop_lvl_stck(tl_lvl_stck *x);
   void flush_lvl_stck(tl_lvl_stck *x);
@@ -254,7 +260,10 @@ extern "C" {
   
   void set_g_lvl_stck(tl_lvl_stck *x);
   inline tl_lvl_stck * get_g_lvl_stck(void);
-  
+
+  // this belongs above, but we hadn't defined tl_lvl_stck yet
+  inline void process_ctl_list(tl_ctl *head, tl_lvl_stck *lvl_stck);
+
   //*************************//
   //      global audio       //
   //*************************//
@@ -263,6 +272,8 @@ extern "C" {
   
   // buffer for reading from adc or writing to dac
   // this is a bus to and from timelab
+
+#define TL_MAXCHANNS 32
   typedef struct _audio_buff{
     
     tl_smp *buff;
@@ -293,6 +304,7 @@ extern "C" {
   tl_audio_buff *get_g_audio_buff_out(void);
   tl_audio_buff *get_g_audio_buff_in(void);
   
+  // NOTE: these may be redundant now! fixme
   void set_g_out_chann_cnt(int cnt);
   void set_g_in_chann_cnt(int cnt);
   int get_g_out_chann_cnt(void);
@@ -301,18 +313,21 @@ extern "C" {
   //*****************************************//
   //  scheduling and housekeeping functions  //
   //*****************************************//
+
+  // conglomerate structure for class head, ctl head, and lvl_stck
+
+  typedef struct _procession{
+    tl_class *class_head;
+    tl_ctl *ctl_head;
+    tl_lvl_stck *lvl_stck;
+  }tl_procession;
+
+  void kill_procession(tl_procession *x);
+  tl_procession *init_procession(void);  
+
   
-  // compute one block of samples for the 
-  // given pclass register
-  
-  // TODO enumerate error codes for this (and other) critical functions
-  
-  //  void tl_grand_init(int sr, int block, 
-  
-  
-  // TODO: organization of this
-  static void tl_dsp_tick(void);
-  extern void tl_audio_on(void);
+  static void tl_dsp_tick(tl_procession *x);
+  extern void tl_audio_on(tl_procession *x);
   extern void tl_audio_off(void);
   extern void tl_audio_suspend(void);
 #define DSP_OFF 0
@@ -353,20 +368,17 @@ extern "C" {
   static tl_a_info tl_g_a_info;
   void tl_set_a_info(int sr, int blck, int indevno, int outdevno, int inchanns, int outchanns, float ltncy);
   tl_a_info tl_get_a_info(void);
-  int tl_g_a_info_get_initialized(void);
-  void tl_g_a_info_set_initialized(void);
-  void tl_g_a_info_unset_initialized(void);
-  static int tl_g_a_info_initialized;  
-
 
   static int tl_g_samplerate;// = 44100;
   static int tl_g_block_len;// = 64;
+
 
   //******************//
   //  module loading  //
   //******************//
   tl_name cpy_file_name_no_path(char *full_path);
-  int tl_load_module(const char *arg_str);  
+  tl_class *tl_load_module(tl_procession *procession, const char *arg_str);  
+
 #ifdef __cplusplus
 }
 #endif

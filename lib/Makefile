@@ -8,7 +8,7 @@ vpath %.h inc
 CFLAGS = -g -DPD -O2 -funroll-loops -fomit-frame-pointer -fPIC
 CFLAGS += -DTESTING
 INCLUDE = -Iinc
-LIBPATH = -L/usr/lib -L/lib64 -L/usr/include -L/usr/local/include -L./bni
+LIBPATH = -L/usr/lib -L/lib64 -L/usr/include -L/usr/local/include
 LIBS = -lportaudio -lm -lpthread #-ltimelab
 OBJ_PATH = ./objs
 
@@ -20,8 +20,8 @@ OBJS = $(SRCS:.c=.o)
 #.PHONY: libtimelab.a 
 .PHONY: libtimelab.so
 
-#all: libtimelab.a libtimelab.so
-all: libtimelab.so
+all: libtimelab.a libtimelab.so
+#all: libtimelab.so
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDE) $(LIBPATH) $(LIBS) -c -o $@ $^
@@ -29,7 +29,7 @@ all: libtimelab.so
 libtimelab.a: $(OBJS)
 	$(AR) -r $@ $(OBJS)
 	mv libtimelab.a ./bin
-	mv *.o $(OBJ_PATH)
+	#mv *.o $(OBJ_PATH)
 
 libtimelab.so: $(OBJS)
 	$(CC) -shared -Wl,-soname,libtimelab.so \

@@ -9,6 +9,33 @@ extern "C" {
 #include "tl_core.h"
 
     //*************//
+    //     ADC     //
+    //*************//
+  typedef struct _adc{
+    
+    /* tl_dsp_func dsp_func; */
+    /* tl_kill_func kill_func; */
+    
+    tl_sig **outlets;
+    int out_cnt;
+    int in_cnt;
+
+    int sr;
+    tl_audio_buff *ab;
+    
+    tl_name *name;
+    
+  }tl_adc;
+  inline void tl_dsp_adc(int samples);
+  // this is special because there is only one dac
+  void tl_init_adc(int in_cnt, int up);
+  void tl_kill_adc(void);
+  void set_g_adc_in(int in, tl_sig *x);
+  tl_adc *tl_get_adc(void);
+  static tl_adc *tl_g_adc;
+    
+
+    //*************//
     //     DAC     //
     //*************//
 
@@ -20,7 +47,7 @@ extern "C" {
     
     tl_sig **inlets;
     int in_cnt;
-    
+    int out_cnt;    
     int sr;
     tl_audio_buff *ab;
     
@@ -135,7 +162,6 @@ extern "C" {
   tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int ctl_cnt, int up);
   void tl_reset_UDS_node(tl_UDS_node *x, tl_smp state);
   void tl_push_UDS_node(tl_UDS_node *x, tl_UDS_node *y);
-
   void tl_kill_UDS_node(tl_UDS_node *x);
   void tl_kill_UDS_net(tl_UDS_node *x);
 
@@ -143,7 +169,7 @@ extern "C" {
   typedef struct _UDS_solver {
 
     tl_UDS_node *UDS_net; // head to the list
-    
+    tl_class *mother;    
     tl_sig **inlets; // input to the whole segment
     tl_sig **outlets; // final output
     int in_cnt;
@@ -162,6 +188,7 @@ extern "C" {
   inline void tl_dsp_UDS_solver(int samples, void *mod);
   void *tl_init_UDS_solver(int ins, int outs, int up);
   void tl_kill_UDS_solver(void *mod);
+
   
   //**********************//
   //     housekeeping     //

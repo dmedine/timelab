@@ -85,7 +85,7 @@ void set_ctl_bang_data(tl_ctl *x, void *data){
   if(x->type == TL_BANG_CTL)
     x->bang_data = data;
   else
-    printf("could not set_ctl_bang_data: wron ctl type\n");
+    printf("could not set_ctl_bang_data: wrong ctl type\n");
 
 
 }
@@ -159,13 +159,13 @@ inline void interpolate_ctl_val(tl_ctl *x){
     }
 }
 
-inline void process_ctl_list(tl_ctl *head){
+inline void process_ctl_list(tl_ctl *head, tl_lvl_stck *lvl_stck){
 
   tl_ctl *x = (tl_ctl *)head;
   //printf("processing control\n");
-  pthread_mutex_lock(&ctl_lock);
+  //  pthread_mutex_lock(&ctl_lock);
   
-  process_lvl_stck(get_g_lvl_stck());
+  process_lvl_stck(lvl_stck);
   while(x->next!=NULL) 
     {
       x=x->next;
@@ -182,7 +182,7 @@ inline void process_ctl_list(tl_ctl *head){
 	  }
     }
 
-  pthread_mutex_unlock(&ctl_lock);
+  //pthread_mutex_unlock(&ctl_lock);
 
 }
 
@@ -242,7 +242,7 @@ tl_lvl_stck *init_lvl_stck(void){
   return x;
 }
 
-void kill_g_lvl_stck(tl_lvl_stck *x){
+void kill_lvl_stck(tl_lvl_stck *x){
 
   if(x!=NULL)
     {
@@ -300,16 +300,16 @@ void flush_lvl_stck(tl_lvl_stck *x){
 inline void process_lvl_stck(tl_lvl_stck *x){
 
   tl_ctl *y;
-  if(tl_g_lvl_stck!=NULL)
+  if(x!=NULL)
     {
-      while(tl_g_lvl_stck->top>=0)
+      while(x->top>=0)
 	{
 	  y = pop_lvl_stck(x);
 	  set_sig_vals(y->outlet, y->val_is);
 	}
     }
   else
-    printf("error in g_lvl_stck: tl_g_lvl_stck not initialized\n");
+    printf("error in g_lvl_stck: no lvl_stck provided\n");
 
 }
 

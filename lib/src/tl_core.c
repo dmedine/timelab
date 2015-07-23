@@ -105,6 +105,7 @@ tl_audio_buff *get_g_audio_buff_in(void){
     }
 }
 
+// NOTE: these may be redundant now! fixme
 void set_g_out_chann_cnt(int cnt){
   tl_g_out_chann_cnt = cnt;
 }
@@ -131,21 +132,18 @@ int get_g_in_chann_cnt(void){
 //*****************************************//
 
 // TODO: implement error codes for this and other critical functions
-static void tl_dsp_tick(void){
+static void tl_dsp_tick(tl_procession *x){
   
-  tl_ctl *ctl_head;
   int thread_id;
   pthread_t thread;
   tl_audio_buff *buff_out;
-  tl_class *class_head;
   int samples;
   
   printf("in the dsp tick\n");
-  ctl_head = get_g_ctl_head();
   
-  if(ctl_head == NULL)
+  if(x->ctl_head == NULL)
     {
-      printf("error: tl_dsp_tick: tl_g_ctl_head does not exist\n");
+      printf("error: tl_dsp_tick: invalid class head in provided procession\n");
       goto over;
       tl_dsp_off();
     }
@@ -164,11 +162,9 @@ static void tl_dsp_tick(void){
       tl_dsp_off;
     }
 
-  class_head = get_g_class_head();
-
-  if(class_head==NULL)
+  if(x->class_head==NULL)
     {
-      printf("error: tl_dsp_tick: tl_g_class_head not initialized\n");
+      printf("error: tl_dsp_tick: invalid class head in provided procession\n");
       goto over;
       tl_dsp_off;
     }
@@ -179,9 +175,9 @@ static void tl_dsp_tick(void){
       // 1. read/write a block of audio
       pa_push_out(buff_out->buff);
       // 2. process samples
-      tl_process_dsp_list(samples, class_head);
+      tl_process_dsp_list(samples, x->class_head);
       // 3. process control
-      process_ctl_list(ctl_head);
+      process_ctl_list(x->ctl_head, x->lvl_stck);
       //usleep(15000);// simulate audio block time
     }
   goto over;
@@ -190,14 +186,14 @@ static void tl_dsp_tick(void){
   return;
 }
 
-extern tl_audio_on(void){
+extern tl_audio_on(tl_procession *x){
   int thread_id;
   printf("starting audio...\n");
   pa_audio_on(); // TODO: implement other audio APIs
   tl_dsp_on(); // turn the 'on' flag on
   // launch the tight loop until tl_dsp_off
   
-  thread_id = pthread_create(&dsp_thread, NULL, &tl_dsp_tick, NULL);
+  thread_id = pthread_create(&dsp_thread, NULL, &tl_dsp_tick, (void *)x);
 }
 
 extern tl_audio_off(void){
@@ -275,14 +271,28 @@ void tl_set_a_info(int sr, int blck, int indevno, int outdevno, int inchanns, in
   tl_g_a_info.inchanns = outchanns;
   tl_g_a_info.outchanns = outchanns;
   tl_g_a_info.latency = ltncy;
-  tl_g_a_info_set_initialized();
+
 }
 
 tl_a_info tl_get_a_info(void){return tl_g_a_info;}
-int tl_g_a_info_get_intitialized(void){return tl_g_a_info_initialized;}
 
-void tl_g_a_info_set_initialized(void){tl_g_a_info_initialized = 1;}
-void tl_g_a_info_unset_initialized(void){tl_g_a_info_initialized = 0;}
+void kill_procession(tl_procession *x){
+
+  tl_kill_ctl_list(x->ctl_head);
+  tl_process_kill_list(x->class_head);
+  kill_lvl_stck(x->lvl_stck);
+
+}
+
+tl_procession *init_procession(void){
+
+  tl_procession *x = malloc(sizeof(tl_procession));
+  x->class_head = init_class();
+  x->ctl_head = init_ctl(TL_HEAD_CTL);
+  x->lvl_stck = init_lvl_stck();
+  return x;
+
+}
 
   //******************//
   //  module loading  //
@@ -312,17 +322,7 @@ tl_name cpy_file_name_no_path(char *full_path){
   return name;
 }
 
-int tl_load_module(const char *arg_str){
-
-  //printf("%s\n", arg_str);
-
-  if (get_g_class_head==NULL)
-    {
-      printf("error: tl_load_module: tl_g_class_head does not exist, cannot load module\n");
-      return -1;
-    }
-
-  // TODO: make error checks at every step
+tl_class *tl_load_module(tl_procession *procession, const char *arg_str){
 
   tl_arglist arglist;
   tl_name mod_name;
@@ -365,26 +365,66 @@ int tl_load_module(const char *arg_str){
 
   // dlopen the module
   handle = dlopen(arglist.argv[0]->str_val, RTLD_LAZY | RTLD_GLOBAL);
-  if(!handle);// TODO: check this
-  
+  printf("%d\n",handle);
+  if(!handle) 
+    {
+      printf("error: tl_load_module: dlopen did return valid file handle\n");
+      goto fail;// TODO: check this
+    }  
   x = init_class();
 
   // get the functions we want
-  x->init_func = (tl_init_func)dlsym(handle, init_name);
-  x->kill_func = (tl_init_func)dlsym(handle, kill_name);
-  x->dsp_func = (tl_init_func)dlsym(handle, dsp_name);
+  if(!(x->init_func = (tl_init_func)dlsym(handle, init_name)))
+    {
+      printf("error: tl_load_module: %s has invalid init function\n",mod_name);
+goto fail;
+    }
+  if(!(x->kill_func = (tl_init_func)dlsym(handle, kill_name)))
+    {
+      printf("error: tl_load_module: %s has invalid kill function\n",mod_name);
+      goto fail;
+    }
+  if(!(x->dsp_func = (tl_init_func)dlsym(handle, dsp_name)))
+    {
+      printf("error: tl_load_module: %s has invalid dsp function\n",mod_name);
+      goto fail;
+    }
+  int *ptr;
+  if(!(ptr = dlsym(handle, "in_cnt")))
+    printf("warning tl_load_module: %s has no symbol 'in_cnt'\n",mod_name);
+  else
+    x->in_cnt = *ptr;
+
+  if(!(ptr=dlsym(handle, "out_cnt")))
+    printf("warning tl_load_module: %s has no symbol 'out_cnt'\n",mod_name);
+  else
+    x->out_cnt = *ptr;
+  printf("ins %d outs %d\n",x->in_cnt, x->out_cnt);
+    
+  if(!(x->mod = (void *)dlsym(handle, "this")))
+      printf("warning: tl_load_module: %s has no self-reference\n",mod_name);
+
+  /* if(!(tmp = (void *)dlsym(handle, "name"))) */
+  /*     printf("warning: tl_load_module: %s has no name\n",mod_name); */
+  /* else x->name = tmp(x); */
 
   // intialize the module
+  x->args = &arglist;
+  // this is now done when the class is initialized  
   x->init_func(&arglist); // TODO: check for errors
 
   // get the dsp and kill functions and push them onto the stack
-  tl_install_class(get_g_class_head(), x);  
+  tl_install_class(procession->class_head, x);  
 
 
   // free memory
   free(init_name);
   free(kill_name);
   free(dsp_name);
+  return x;
+ fail:
+  printf("error: tl_load_module: module was invalid\n");
+  return -1;
 
 }
 

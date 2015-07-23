@@ -6,6 +6,7 @@
 #include "tl_core.h"
 #include "stdlib.h"
 
+
 tl_class *init_class(void){
 
 tl_class *x = (tl_class *)malloc(sizeof(tl_class));
@@ -14,8 +15,11 @@ tl_class *x = (tl_class *)malloc(sizeof(tl_class));
  x->init_func = NULL;
  x->args = NULL;
  x->mod = NULL;
+ x->mod_ctls = NULL;
  x->name = NULL;
- x->next = NULL;
+ x->in_cnt = 0;
+ x->out_cnt = 0;
+ x->next=NULL;
  return x;
 }
 
@@ -23,6 +27,7 @@ tl_class *x = (tl_class *)malloc(sizeof(tl_class));
 void kill_class(tl_class *x){
   if(x!=NULL)
     {
+      //printf("killing class %s\n", (char *)x->name);
       free(x);
       x = NULL;
     }
@@ -52,12 +57,13 @@ void tl_install_class(tl_class *x, tl_class *y){
   while(x->next!=NULL)
     x=x->next;
   x->next = y;
-
+  y->init_func(y->args);
+  //printf("installing class %s\n", y->name);
 }
 
 inline void tl_process_dsp_list(int samples, tl_class *x){
 
-  
+  printf("processing dsp list\n");
   if(x!=NULL)
     {
       x=x->next;
@@ -75,6 +81,7 @@ inline void tl_process_dsp_list(int samples, tl_class *x){
 //void tl_process_kill_list(tl_class_list *x){
 void tl_process_kill_list(tl_class *x){
   tl_class *dummy = x;
+  tl_class *y = x;
   if(x!=NULL)
     {
       x = x->next; // the class list head is empty
@@ -92,7 +99,7 @@ void tl_process_kill_list(tl_class *x){
 
 	}
       // kill the class head
-      kill_class(get_g_class_head());
+      kill_class(y);
     }
   else printf("error: process_kill_list: kill list is null\n");
 

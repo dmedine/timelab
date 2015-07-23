@@ -31,6 +31,7 @@ private slots:
 private:
 
     Ui::MainWindow *ui; // window pointer
+    tl_procession *procession; // gateway to timelab scheduler
 };
 
 

@@ -255,8 +255,10 @@ int pa_is_streaming(void){return pa_streaming;}
 inline void pa_push_out(tl_smp *output_buff){
 
 
+  // these could be optimized out:
   int out_channs = pa_g_outstreamparams.channelCount;
   int block_len = tl_get_block_len();
+
   tl_smp *fp1, *fp2, *fp3;
   int i, j, k;
 

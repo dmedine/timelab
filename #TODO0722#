@@ -1,0 +1,9 @@
+eliminate init exit stuff
+--all instances of timelab should consist of a static procession, which consists of a class list, a control list and a level stack (auxillary to the control structure and responsible for keeping unchanging control values constant as they stream along)
+
+codify the relationship of 'classes' and 'modules'
+--what needs to happen here is that the init function should return an instance of the module and this should be inserted into the appropriate mother class -- poor man's inheritance
+--the idea is that 'classes' belong to timelab and that 'modules' belong to the programmer 
+--classes don't change and should be managed more or less completely under the hood 
+--modules are modular and are the domain of the programmer 
+--each one needs its own data structure and should not need to point up to its mother class, only its own data

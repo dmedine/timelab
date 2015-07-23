@@ -3,24 +3,89 @@
 #include "math.h"
 
     //*************//
+    //     ADC     //
+    //*************//
+inline void tl_dsp_adc(int samples){
+
+  int i,s, j, buff_pos=0;
+  tl_adc *x = tl_get_adc();
+  s=samples;
+  for(i=0; i<x->out_cnt; i++)
+    {
+      for(j=0; j<s; j++)
+	{
+	  x->outlets[i]->smps[j] = 
+	    x->ab->buff[buff_pos++]; 
+	    
+
+	  /* if(x->ab->buff_pos_w >= x->ab->buff_len) */
+	  /*   x->ab->buff_pos_w -= x->ab->buff_len; */
+	}
+
+    }
+
+}
+
+void tl_init_adc(int out_cnt, int up){
+
+  printf("creating adc...\n");
+
+  tl_g_adc = (tl_adc *)malloc(sizeof(tl_adc));
+
+  tl_g_adc->outlets = init_sigs(out_cnt, TL_OUTLET, 1);
+  tl_g_adc->out_cnt = out_cnt;
+  tl_g_adc->in_cnt = 0;
+
+  tl_g_adc->sr = tl_get_samplerate();
+
+  tl_g_adc->ab = get_g_audio_buff_in();
+
+}
+
+void tl_kill_adc(void){
+  
+  
+  if(tl_g_adc!=NULL)
+    {
+      kill_outlets(tl_g_adc->outlets, tl_g_adc->out_cnt);
+
+      free(tl_g_adc);
+      tl_g_adc = NULL;
+
+    }
+  else printf("warning: tl_kill_adc: tl_g_adc does not (yet) exist\n");
+}
+
+tl_adc *tl_get_adc(void){
+
+  if(tl_g_adc != NULL)
+    return tl_g_adc;
+  else
+    {
+      printf("error: tl_get_dac: tl_g_dac not initialized\n");
+      return NULL;
+    }
+}
+
+    //*************//
     //     DAC     //
     //*************//
 
 
 inline void tl_dsp_dac(int samples){
 
-  int i,s, j;
+  int i,s, j, buff_pos=0;
   tl_dac *x = tl_get_dac();
   s=samples;
   for(i=0; i<x->in_cnt; i++)
     {
       for(j=0; j<s; j++)
 	{
-	  x->ab->buff[x->ab->buff_pos_w++] = 
+	  x->ab->buff[buff_pos++] = 
 	    x->inlets[i]->smps[j];
 
-	  if(x->ab->buff_pos_w >= x->ab->buff_len)
-	    x->ab->buff_pos_w -= x->ab->buff_len;
+	  /* if(x->ab->buff_pos_w >= x->ab->buff_len) */
+	  /*   x->ab->buff_pos_w -= x->ab->buff_len; */
 	}
 
     }
@@ -59,11 +124,13 @@ void tl_init_dac(int in_cnt, int up){
   tl_g_dac->sr = tl_get_samplerate();
 
   //tl_dac_cnt++;
+
   
-  // again, we are presuming only one dac at a time ...
-  set_g_out_chann_cnt(in_cnt);
-  tl_g_dac->ab = init_audio_buff(in_cnt);
-  set_g_audio_buff_out(tl_g_dac->ab);
+  /* // again, we are presuming only one dac at a time ... */
+  /* set_g_out_chann_cnt(in_cnt); */
+  tl_g_dac->ab = get_g_audio_buff_out();
+  /* tl_g_dac->ab = init_audio_buff(in_cnt); */
+  /* set_g_audio_buff_out(tl_g_dac->ab); */
 
  /* sunk: */
  /*  printf("error: tl_dac_init: invalid arg list, could not create\n"); */
@@ -77,8 +144,8 @@ void tl_kill_dac(void){
     {
       kill_inlets(tl_g_dac->inlets);
 
-      if(tl_g_dac->ab!=NULL)
-	kill_audio_buff(tl_g_dac->ab);
+      /* if(tl_g_dac->ab!=NULL) */
+      /* 	kill_audio_buff(tl_g_dac->ab); */
       free(tl_g_dac);
       tl_g_dac = NULL;
       //tl_dac_cnt--;
@@ -321,9 +388,10 @@ void tl_reset_UDS_node(tl_UDS_node *x, tl_smp state){
 // so we can just push and pop at will
 void tl_push_UDS_node(tl_UDS_node *x, tl_UDS_node *y){
 
+
   while(x->next!=NULL)x=x->next;
   x->next = y;
-
+    
 }
 
 void tl_kill_UDS_node(tl_UDS_node *x){

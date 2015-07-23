@@ -2,15 +2,16 @@
 
 void tl_init(void){
 
-  // initialize control structure
-  set_g_lvl_stck(init_lvl_stck());
-  set_g_ctl_head(init_ctl(TL_HEAD_CTL));
+  /* // initialize control structure */
+  /* set_g_lvl_stck(init_lvl_stck()); */
+  /* set_g_ctl_head(init_ctl(TL_HEAD_CTL)); */
 
-  // now register the classes
-  set_g_class_head(init_class());
+  /* // now register the classes */
+  /* set_g_class_head(init_class()); */
 
-  // initialize global variables (there must be others)
-  tl_g_a_info_set_initialized();
+  // this just tells our audio info struct
+  // that this function has been called
+  //  tl_g_a_info_set_initialized();
 
 }
 
@@ -30,7 +31,13 @@ void tl_audio_init(void){
       pa_initialize_strct(tl_get_a_info());
       //pa_audio_on();
 
-      // initialize the empty signal 
+      // initialize the global audio buffers 
+      tl_g_audio_buff_out = init_audio_buff(TL_MAXCHANNS);
+      set_g_audio_buff_out(tl_g_audio_buff_out);
+      tl_g_audio_buff_in = init_audio_buff(TL_MAXCHANNS);
+      set_g_audio_buff_in(tl_g_audio_buff_in);
+  
+     // initialize the empty signal 
       tl_kill_empty_sig(); // make sure it's dead
       tl_init_empty_sig();
       
@@ -48,9 +55,15 @@ void tl_exit(void){
   pa_audio_off(); 
   pa_kill_conversion_buff(); 
   // kill the control structure
-  tl_process_kill_list(get_g_class_head());
-  // and its level stack
-  kill_g_lvl_stck(get_g_lvl_stck());
+  /* tl_process_kill_list(get_g_class_head()); */
+  /* // and its level stack */
+  /* kill_g_lvl_stck(get_g_lvl_stck()); */
+
+  if(get_g_audio_buff_out()!=NULL)
+      kill_audio_buff(get_g_audio_buff_out());
+  if(get_g_audio_buff_in()!=NULL)
+      kill_audio_buff(get_g_audio_buff_in());
+
 
 }
 
