@@ -10,6 +10,7 @@ FILE *fp;
 static tl_UDS_solver *solver;
 static tl_UDS_node *node_sqr;
 static tl_UDS_node *node_tri;
+static tl_ctl *value;
 static tl_smp inv_cap = -100000.0;
 static tl_smp tri_thresh = .99;
 static tl_smp tanh_gain = 50.0;
@@ -20,6 +21,7 @@ static tl_smp g_freq = 480;
 // globals to pass to mother class
 int in_cnt = 0;
 int out_cnt = 4;
+tl_ctl **ctls;
 
 tl_smp find_slope(tl_smp freq, tl_smp skew, int dir){
 
@@ -111,7 +113,14 @@ void tl_init_tri_sqr(tl_arglist *args){
 
   set_g_dac_in(0, solver->outlets[0]);
   set_g_dac_in(1, solver->outlets[1]);
-  fp = fopen("tri_sqr_out", "w");
+  //  fp = fopen("tri_sqr_out", "w");
+
+
+  value = init_ctl(TL_LIN_CTL);
+  value->name = name_new("value");
+  *ctls = value;
+
+
 }
 
 void tl_kill_tri_sqr(tl_class *class_ptr){
@@ -119,7 +128,7 @@ void tl_kill_tri_sqr(tl_class *class_ptr){
   tl_kill_UDS_solver(solver); // kills the nodes automatically
   tl_kill_dac();
 
-  fclose(fp);
+  // fclose(fp);
 }
 
 void tl_dsp_tri_sqr(int samples, void *mod_ptr){

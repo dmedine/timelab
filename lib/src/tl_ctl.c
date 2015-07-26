@@ -161,8 +161,7 @@ inline void interpolate_ctl_val(tl_ctl *x){
 
 inline void process_ctl_list(tl_ctl *head, tl_lvl_stck *lvl_stck){
 
-  tl_ctl *x = (tl_ctl *)head;
-  //printf("processing control\n");
+  tl_ctl *x = head;
   //  pthread_mutex_lock(&ctl_lock);
   
   process_lvl_stck(lvl_stck);
@@ -235,9 +234,14 @@ void tl_kill_ctl_list(tl_ctl *head){
 }
 
 tl_lvl_stck *init_lvl_stck(void){
-
+  
+  int i;
   tl_lvl_stck *x = (tl_lvl_stck *) malloc(sizeof(tl_lvl_stck));
+  x->ctls =  malloc(MAX_CTL*sizeof(tl_ctl *)); 
   x->top = -1;
+
+  for(i=0; i<MAX_CTL; i++)
+    x->ctls[i] = NULL;
 
   return x;
 }
@@ -258,14 +262,14 @@ inline void push_lvl_stck(tl_lvl_stck *x, tl_ctl *y){
     {
       if(++x->top<0)
 	{
-	  printf("error in push_g_lvl_stck: stack underflow\n");
+	  printf("error in push_lvl_stck: stack underflow\n");
 	  return;
 	}
       
 
       if(x->top>=MAX_CTL)
 	{
-	  printf("error in push_g_lvl_stck: stack overflow\n");
+	  printf("error in push_lvl_stck: stack overflow\n");
 	  return;
 	}
  
@@ -273,7 +277,7 @@ inline void push_lvl_stck(tl_lvl_stck *x, tl_ctl *y){
     }
   else
     {
-      printf("error in pus_g_lvl_stk: tl_g_lvl_stck not initialized\n");
+      printf("error in push_lvl_stk: tl_g_lvl_stck not initialized\n");
       return;
     }
 

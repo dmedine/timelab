@@ -1,0 +1,1 @@
+x->lvl_stck can be part of the ctl struct and installed ontot the associated ctl_head

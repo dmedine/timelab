@@ -58,12 +58,13 @@ void tl_install_class(tl_class *x, tl_class *y){
     x=x->next;
   x->next = y;
   y->init_func(y->args);
+
   //printf("installing class %s\n", y->name);
 }
 
 inline void tl_process_dsp_list(int samples, tl_class *x){
 
-  printf("processing dsp list\n");
+  //printf("processing dsp list\n");
   if(x!=NULL)
     {
       x=x->next;

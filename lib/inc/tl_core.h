@@ -244,7 +244,7 @@ extern "C" {
 #define MAX_CTL 9999
   typedef struct _lvl_stck{
     
-    tl_ctl *ctls[MAX_CTL];
+    tl_ctl **ctls;
     int top;
     
   }tl_lvl_stck;

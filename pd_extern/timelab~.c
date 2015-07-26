@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 static t_class *timelab_tilde_class;
+t_sample foo;
 
 static void variable_dsp_add(int sig_cnt){
   // add the dsp adds here...
@@ -35,7 +36,7 @@ static t_int *timelab_tilde_perform(t_int *w){
   int i,j;
   int n=(int)(w[2+x->total_sigs]); // get number of samples
   t_sample *pd_buff_ptr;
-
+  printf("%d\n",n);
   process_ctl_list(x->procession->ctl_head, x->procession->lvl_stck);
   
   // write to global in bus for timelab (read by its adc)
@@ -56,15 +57,42 @@ static t_int *timelab_tilde_perform(t_int *w){
   if(x->out_cnt>0)
     {
       ab=get_g_audio_buff_out();
-      for(i=0;i<x->in_cnt; i++)
+      for(i=0;i<x->out_cnt; i++)
   	{
   	  pd_buff_ptr = (t_sample *)w[i+2+x->in_cnt];
   	  for(j=0; j<n; j++)
   	    pd_buff_ptr[j] = ab->buff[i*n+j];
+	  printf("%f\n", ab->buff[0]);
+	  
   	}
     }
   //printf("3+x->total_sigs %d\n", 3+x->total_sigs);
   return w+3+x->total_sigs;
+}
+
+static void timelab_tilde_ctl(t_timelab_tilde *x, 
+			      t_floatarg who,
+			      t_floatarg what){
+
+  post("%f %f", who, what);
+
+}
+ 
+static void timelab_tilde_list_ctl(t_timelab_tilde *x){
+
+  post("hello!");
+  int i = 0;
+  tl_ctl *y = x->procession->ctl_head->next;
+  while(y!=NULL)
+    {
+      if(y->type==TL_BANG_CTL)
+	post("ctl %d %s, type bang", i++, y->name);
+      if(y->type==TL_LIN_CTL)
+	post("ctl %d %s, type linear ctl", i++, y->name);
+      y=y->next;
+    }
+
+
 }
 
 static void timelab_tilde_dsp(t_timelab_tilde *x, t_signal **sp){
@@ -125,7 +153,7 @@ static void *timelab_tilde_new(t_symbol *s, int argc, t_atom *argv){
   post("out_cnt %d\n", x->out_cnt);
   for(i=0;i<x->out_cnt;i++)
     outlet_new(&x->x_obj, &s_signal);
-
+  foo = 0;
   goto end;
 
  end:
@@ -162,5 +190,19 @@ void timelab_tilde_setup(void){
   		  (t_method)timelab_tilde_dsp,
   		  gensym("dsp"),
   		  0);
+
+  // method for reading in control data
+  class_addmethod(timelab_tilde_class,
+		  (t_method)timelab_tilde_ctl,
+		  gensym("tl"),
+		  A_DEFFLOAT,
+		  A_DEFFLOAT,
+		  0);
+
+
+  class_addmethod(timelab_tilde_class,
+		  (t_method)timelab_tilde_list_ctl,
+		  gensym("tl_list_ctl"),
+		  0);
 
 }

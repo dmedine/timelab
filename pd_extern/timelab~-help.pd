@@ -1,18 +1,22 @@
-#N canvas 1 76 450 300 10;
-#X obj 42 35 timelab~ /home/dmedine/programming/c_code/timelab-0.10/modules/tri_sqr.tl
+#N canvas 611 166 630 465 10;
+#X obj 66 239 timelab~ /home/dmedine/programming/c_code/timelab-0.10/modules/tri_sqr.tl
 ;
-#X msg 117 130 \; pd dsp 1;
-#X msg 212 134 \; pd dsp 0;
-#X obj 51 131 bang~;
-#X obj 45 154 snapshot~;
-#X floatatom 44 202 5 0 0 0 - - -, f 5;
-#X obj 328 136 osc~ 440;
-#X obj 355 171 bang~;
-#X obj 349 194 snapshot~;
-#X floatatom 348 242 5 0 0 0 - - -, f 5;
+#X msg 141 334 \; pd dsp 1;
+#X msg 236 338 \; pd dsp 0;
+#X obj 75 335 bang~;
+#X obj 69 358 snapshot~;
+#X floatatom 68 406 5 0 0 0 - - -, f 5;
+#X obj 352 340 osc~ 440;
+#X obj 379 375 bang~;
+#X obj 373 398 snapshot~;
+#X floatatom 372 446 5 0 0 0 - - -, f 5;
+#X msg 200 131 tl 1 1;
+#X msg 167 114 tl_list_ctl;
 #X connect 0 0 4 0;
 #X connect 3 0 4 0;
 #X connect 4 0 5 0;
 #X connect 6 0 8 0;
 #X connect 7 0 8 0;
 #X connect 8 0 9 0;
+#X connect 10 0 0 0;
+#X connect 11 0 0 0;

@@ -390,6 +390,9 @@ goto fail;
       goto fail;
     }
   int *ptr;
+
+  // TODO: othis needs a more elegant solution:
+
   if(!(ptr = dlsym(handle, "in_cnt")))
     printf("warning tl_load_module: %s has no symbol 'in_cnt'\n",mod_name);
   else
@@ -399,8 +402,10 @@ goto fail;
     printf("warning tl_load_module: %s has no symbol 'out_cnt'\n",mod_name);
   else
     x->out_cnt = *ptr;
-  printf("ins %d outs %d\n",x->in_cnt, x->out_cnt);
+ printf("ins %d outs %d\n",x->in_cnt, x->out_cnt);
     
+  // printf("ins %d outs %d\n",x->in_cnt, x->out_cnt);
+     
   if(!(x->mod = (void *)dlsym(handle, "this")))
       printf("warning: tl_load_module: %s has no self-reference\n",mod_name);
 
@@ -411,11 +416,22 @@ goto fail;
   // intialize the module
   x->args = &arglist;
   // this is now done when the class is initialized  
-  x->init_func(&arglist); // TODO: check for errors
+  //x->init_func(&arglist); // TODO: check for errors
 
   // get the dsp and kill functions and push them onto the stack
+  // this also initializes the module -- we need to do this before passing the ctl pointer to the ctl list
   tl_install_class(procession->class_head, x);  
 
+  // install ctls if any
+ tl_ctl **ctl_ptr;
+  if(!(ctl_ptr=dlsym(handle, "ctls")))
+    {
+      ctl_ptr = NULL;
+      printf("warning tl_load_module: %s has no symbol 'ctls'\n",mod_name);
+    }
+  x->mod_ctls = *ctl_ptr;
+
+  install_onto_ctl_list(procession->ctl_head, (tl_ctl *)x->mod_ctls);
 
   // free memory
   free(init_name);
