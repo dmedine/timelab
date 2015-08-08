@@ -29,7 +29,8 @@ tl_ctl *init_ctl(int type){
 
   x->name = NULL;
   x->bang_func = NULL;
-  x->ctl_kr = NULL;
+  x->ctl_kr = &foo_smp;
+  x->bang_go = &foo_int;
   x->ctl_inlet = NULL;
   x->val_was = 0.0;
   x->val_is = 0.0;
@@ -76,7 +77,7 @@ void set_ctl_bang_go(tl_ctl *x, int *bang_go){
   if(x->type == TL_BANG_CTL)
     x->bang_go = bang_go;
   else
-    printf("could not set_ctl_bang_go: wron ctl type\n");
+    printf("could not set_ctl_bang_go: wrong ctl type\n");
 
 }
 
@@ -177,7 +178,7 @@ inline void process_ctl_list(tl_ctl *head, tl_lvl_stck *lvl_stck){
 	if(*x->bang_go == 1)
 	  {
 	    x->bang_func(x->bang_data);
-	    *x->bang_go = 0;
+	    x->bang_go = 0;
 	  }
     }
 
@@ -188,7 +189,12 @@ inline void process_ctl_list(tl_ctl *head, tl_lvl_stck *lvl_stck){
 void install_onto_ctl_list(tl_ctl *head, tl_ctl *x){
   
   tl_ctl *y = head;
-  while(y->next!=NULL)y=y->next;
+  //print("x->name %s\n", x->name);
+  while(y->next!=NULL)
+    {
+      // print("y->name %s\n", y->name);
+      y=y->next;
+    }
   y->next = x;
 
 }

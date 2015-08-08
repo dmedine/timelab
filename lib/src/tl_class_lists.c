@@ -64,7 +64,7 @@ void tl_install_class(tl_class *x, tl_class *y){
 
 inline void tl_process_dsp_list(int samples, tl_class *x){
 
-  //printf("processing dsp list\n");
+  //printf("processing dsp list %d\n", samples);
   if(x!=NULL)
     {
       x=x->next;

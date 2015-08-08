@@ -21,7 +21,7 @@ static tl_smp g_freq = 480;
 // globals to pass to mother class
 int in_cnt = 0;
 int out_cnt = 4;
-tl_ctl **ctls;
+void *ctls;
 
 tl_smp find_slope(tl_smp freq, tl_smp skew, int dir){
 
@@ -118,9 +118,11 @@ void tl_init_tri_sqr(tl_arglist *args){
 
   value = init_ctl(TL_LIN_CTL);
   value->name = name_new("value");
-  *ctls = value;
 
+}
 
+tl_ctl *tl_reveal_ctls_tri_sqr(void){
+  return value;
 }
 
 void tl_kill_tri_sqr(tl_class *class_ptr){
@@ -134,8 +136,9 @@ void tl_kill_tri_sqr(tl_class *class_ptr){
 void tl_dsp_tri_sqr(int samples, void *mod_ptr){
 
   tl_smp atten = 0.0;
-  int samps = tl_get_block_len(), i;
-
+  int samps = samples;
+  //printf("in dsp_tri_sqr %d\n",samples);
+  printf("%p\n",solver);
   tl_dsp_UDS_solver(samps, solver);
 
   /* for(i=0;i<samps;i++) */
@@ -145,7 +148,7 @@ void tl_dsp_tri_sqr(int samples, void *mod_ptr){
   /*   //    fprintf(fp, "%f %f\n", solver->outlets[0]->smps[i], solver->outlets[1]->smps[i]); */
   /*   } */
   /* scale_sig_vals(solver->outlets[0], &atten); */
-  scale_sig_vals(solver->outlets[1], &atten);
+  /* scale_sig_vals(solver->outlets[1], &atten); */
   tl_dsp_dac(samps);
 
 }

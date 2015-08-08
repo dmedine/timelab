@@ -23,8 +23,10 @@ extern "C" {
 
 #define tl_name const char *// string to hold names
 
-
-
+  // these are just place holders for construction
+  // purposes  
+  static tl_smp foo_smp = 0.0;
+  static int foo_int = 0;
    //********************//
    //       tl_sig       //
    //********************//
@@ -197,12 +199,17 @@ extern "C" {
     // define what this bang will do
     void *bang_data; // we can pass it data if we wish
     
+
+    // this variable is the control rate interface to the
+    // outside world
+    tl_smp *ctl_kr;
+
+    // this variable controls the bang function action
+    int *bang_go;
+
     // if it is linearly interpolated
     // we need to know previous value,
-    // new value, and have a send outlet
-    tl_smp *ctl_kr;
-    int *bang_go;
-    
+    // new value, and have a send outlet    
     tl_smp val_was;
     tl_smp val_is;
     tl_sig *ctl_inlet;

@@ -35,37 +35,42 @@ static t_int *timelab_tilde_perform(t_int *w){
   tl_audio_buff *ab;
   int i,j;
   int n=(int)(w[2+x->total_sigs]); // get number of samples
+  //  printf("%d\n", n);
   t_sample *pd_buff_ptr;
-  printf("%d\n",n);
+
+  // make sure timelab has the right blocksize
+
+  //printf("%d\n",n);
   process_ctl_list(x->procession->ctl_head, x->procession->lvl_stck);
   
-  // write to global in bus for timelab (read by its adc)
-  if(x->in_cnt>0)
-    {
-      ab=get_g_audio_buff_in();
-      for(i=0;i<x->in_cnt; i++)
-  	{
-  	  pd_buff_ptr = (t_sample *)w[i+2];
-  	  for(j=0; j<n; j++)
-  	    ab->buff[i*n+j] = pd_buff_ptr[j];
-  	}
-    }
+  /* // write to global in bus for timelab (read by its adc) */
+  /* if(x->in_cnt>0) */
+  /*   { */
+  /*     ab=get_g_audio_buff_in(); */
+  /*     for(i=0;i<x->in_cnt; i++) */
+  /* 	{ */
+  /* 	  pd_buff_ptr = (t_sample *)w[i+2]; */
+  /* 	  for(j=0; j<n; j++) */
+  /* 	    ab->buff[i*n+j] = pd_buff_ptr[j]; */
+  /* 	} */
+  /*   } */
 
   tl_process_dsp_list(n, x->procession->class_head);
-
-  // write out to timelab's global out bus (read from its dac)
-  if(x->out_cnt>0)
-    {
-      ab=get_g_audio_buff_out();
-      for(i=0;i<x->out_cnt; i++)
-  	{
-  	  pd_buff_ptr = (t_sample *)w[i+2+x->in_cnt];
-  	  for(j=0; j<n; j++)
-  	    pd_buff_ptr[j] = ab->buff[i*n+j];
-	  printf("%f\n", ab->buff[0]);
-	  
-  	}
-    }
+  
+  /* // write out to timelab's global out bus (read from its dac) */
+  /* if(x->out_cnt>0) */
+  /*   { */
+  /*     ab=get_g_audio_buff_out(); */
+  /*     for(i=0;i<x->out_cnt; i++) */
+  /* 	{ */
+  /* 	  pd_buff_ptr = (t_sample *)w[i+2+x->in_cnt]; */
+  /* 	  for(j=0; j<n; j++) */
+  /* 	    { */
+  /* 	      pd_buff_ptr[j] = (t_sample)ab->buff[i*n+j]; */
+  /* 	      //	      printf("%f\n", ab->buff[0]); */
+  /* 	    } */
+  /* 	} */
+  /*   } */
   //printf("3+x->total_sigs %d\n", 3+x->total_sigs);
   return w+3+x->total_sigs;
 }
@@ -82,13 +87,15 @@ static void timelab_tilde_list_ctl(t_timelab_tilde *x){
 
   post("hello!");
   int i = 0;
-  tl_ctl *y = x->procession->ctl_head->next;
+  tl_ctl *y = x->procession->ctl_head;
   while(y!=NULL)
     {
+      if(y->type==TL_HEAD_CTL)
+	post("ctl: %d, name: %s, type: head", i++, y->name);
       if(y->type==TL_BANG_CTL)
-	post("ctl %d %s, type bang", i++, y->name);
+	post("ctl: %d name: %s, type: bang", i++, y->name);
       if(y->type==TL_LIN_CTL)
-	post("ctl %d %s, type linear ctl", i++, y->name);
+	post("ctl: %d, name: %s, type: linear ctl", i++, y->name);
       y=y->next;
     }
 
@@ -119,7 +126,7 @@ static void *timelab_tilde_new(t_symbol *s, int argc, t_atom *argv){
 
   // get the sample rate correct
   tl_set_samplerate((int)sys_getsr());
-
+  
   // instantiate a gateway to timelab's scheduler
   x->procession = init_procession();
 

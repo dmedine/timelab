@@ -17,13 +17,20 @@ LIBS  =-ltimelab
 
  current: tl
 
+
  tl: $(NAME).tl 
 
  .SUFFIXES: .tl
 
- CFLAGS = -g -DPD -O2 -funroll-loops -fomit-frame-pointer -fPIC \
+ CFLAGS = -g -DPD -funroll-loops -fomit-frame-pointer -fPIC \
      -Wall -W -Wshadow -Wstrict-prototypes \
      -Wno-unused -Wno-parentheses -Wno-switch
+
+debug: $(CFLAGS) += -DDEBUG -O0
+debug: current
+
+release: $(CFLAGS) += -DTESTING -O2
+release: current
 
 .c.tl:	 
 	$(CC) -g -o $*.o  $(CFLAGS) $(INCLUDE) -c $*.c

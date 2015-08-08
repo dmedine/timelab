@@ -74,13 +74,16 @@ tl_adc *tl_get_adc(void){
 
 inline void tl_dsp_dac(int samples){
 
+  //  printf("in the dac... %d\n", samples);
   int i,s, j, buff_pos=0;
   tl_dac *x = tl_get_dac();
   s=samples;
   for(i=0; i<x->in_cnt; i++)
     {
+
       for(j=0; j<s; j++)
 	{
+
 	  x->ab->buff[buff_pos++] = 
 	    x->inlets[i]->smps[j];
 
@@ -445,52 +448,53 @@ inline void tl_dsp_UDS_solver(int samples, void *mod){
 
   int i, j, k;
   tl_UDS_solver *x = (tl_UDS_solver *)mod;
+  printf("%p\n", x);
   tl_UDS_node *y;
   for(i=0; i<samples; i++)
     {
       for(j=0;j<4;j++)
-	{
-	  // go through the whole network 
-	  // each time
-	  y = x->UDS_net->next;
-	  k=0; // tracks which node we are solving for
+  	{
+  	  // go through the whole network
+  	  // each time
+  	  y = x->UDS_net->next;
+  	  k=0; // tracks which node we are solving for
 
-	  // think about how to do this in one loop!
-	  // first gather the current partial states
-	  while(y!=NULL)
-	    {
-	    // push the current RK stage datum
-	      *y->data_out = y->state + (x->mult[j] * y->ks[j]);
-	      // printf("y %p data_out %f  state %f :: ", y, *y->data_out, y->state);
-	      y=y->next;
-	    }
+  	  // think about how to do this in one loop!
+  	  // first gather the current partial states
+  	  while(y!=NULL)
+  	    {
+  	    // push the current RK stage datum
+  	      *y->data_out = y->state + (x->mult[j] * y->ks[j]);
+  	      // printf("y %p data_out %f  state %f :: ", y, *y->data_out, y->state);
+  	      y=y->next;
+  	    }
 
-	  // now call the differential functions at each node
-	  y = x->UDS_net->next;
-	  while(y!=NULL)
-		{
-	      // evaluate the ODE at this stage
-	      // use i for ctl referencing
-	      y->ks[j+1] = y->func(y,i);
+  	  // now call the differential functions at each node
+  	  y = x->UDS_net->next;
+  	  while(y!=NULL)
+  	  	{
+  	      // evaluate the ODE at this stage
+  	      // use i for ctl referencing
+  	      y->ks[j+1] = y->func(y,i);
 
-	      // if stage 4, solve it ...
-	      if(j==3) // calculate the dx
-		{
-		  y->dx =  x->one_sixth * x->h_time * 
-		    (y->ks[1] + 
-		     (2*y->ks[2]) + 
-		     (2*y->ks[3]) +
-		     y->ks[4]); 
+  	      // if stage 4, solve it ...
+  	      if(j==3) // calculate the dx
+  	      	{
+  	      	  y->dx =  x->one_sixth * x->h_time *
+  	      	    (y->ks[1] +
+  	      	     (2*y->ks[2]) +
+  	      	     (2*y->ks[3]) +
+  	      	     y->ks[4]);
 		  
-		  // output new state and update
-		  y->state = y->state + y->dx;
-		  x->outlets[k++]->smps[i] = y->state;
-		}
-	      y=y->next; 
-	    }
+  	      	  // output new state and update
+  	      	  y->state = y->state + y->dx;
+  	      	  x->outlets[k++]->smps[i] = y->state;
+  	      	}
+  	      y=y->next;
+  	    }
 
 	  	  
-	}
+  	}
 
     }
 

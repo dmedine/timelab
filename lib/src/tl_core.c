@@ -148,12 +148,6 @@ static void tl_dsp_tick(tl_procession *x){
       tl_dsp_off();
     }
 
-/* if(get_g_dsp_list == NULL) */
-/* { */
-/* printf("cannot begin dsp loop: tl_g_dsp_list does not exist\n"); */
-/* goto over; */
-/* } */
-  
   buff_out = get_g_audio_buff_out();
   if(buff_out==NULL)
     {
@@ -172,13 +166,19 @@ static void tl_dsp_tick(tl_procession *x){
 
   while(tl_g_dsp_status == DSP_ON)
     {
+
       // 1. read/write a block of audio
+      // this will block until it is time to read
+      // write audio samples
       pa_push_out(buff_out->buff);
+
       // 2. process samples
       tl_process_dsp_list(samples, x->class_head);
+
+      // this can maybe go on a separate thread:
       // 3. process control
       process_ctl_list(x->ctl_head, x->lvl_stck);
-      //usleep(15000);// simulate audio block time
+
     }
   goto over;
  over:
@@ -331,9 +331,12 @@ tl_class *tl_load_module(tl_procession *procession, const char *arg_str){
   char *init_name;
   char *kill_name;
   char *dsp_name;
+  char *ctls_name;
+  void* (*ctls_func)(void);
   const char *init_affix = "tl_init_";
   const char *kill_affix = "tl_kill_";
   const char *dsp_affix  = "tl_dsp_";
+  const char *ctls_affix  = "tl_reveal_ctls_";
   int mod_name_len;
   int i;
 
@@ -361,6 +364,10 @@ tl_class *tl_load_module(tl_procession *procession, const char *arg_str){
   dsp_name = malloc(sizeof(char)*(strlen(dsp_affix) + mod_name_len));
   strcpy(dsp_name, dsp_affix);
   strcat(dsp_name, mod_name);// correct?
+
+  ctls_name = malloc(sizeof(char)*(strlen(ctls_affix) + mod_name_len));
+  strcpy(ctls_name, ctls_affix);
+  strcat(ctls_name, mod_name);// correct?
 
 
   // dlopen the module
@@ -390,6 +397,15 @@ goto fail;
       goto fail;
     }
   int *ptr;
+
+
+  // get the ctls, if any
+  if(!(ctls_func = (tl_init_func)dlsym(handle, ctls_name)))
+    {
+      printf("warning: tl_load_module: %s has no ctls revelation\n",mod_name);
+      ctls_func = NULL;
+    }
+
 
   // TODO: othis needs a more elegant solution:
 
@@ -423,20 +439,14 @@ goto fail;
   tl_install_class(procession->class_head, x);  
 
   // install ctls if any
- tl_ctl **ctl_ptr;
-  if(!(ctl_ptr=dlsym(handle, "ctls")))
-    {
-      ctl_ptr = NULL;
-      printf("warning tl_load_module: %s has no symbol 'ctls'\n",mod_name);
-    }
-  x->mod_ctls = *ctl_ptr;
-
-  install_onto_ctl_list(procession->ctl_head, (tl_ctl *)x->mod_ctls);
+  if(ctls_func != NULL)
+    install_onto_ctl_list(procession->ctl_head, (tl_ctl *)ctls_func());
 
   // free memory
   free(init_name);
   free(kill_name);
   free(dsp_name);
+  free(ctls_name);
   return x;
  fail:
   printf("error: tl_load_module: module was invalid\n");
