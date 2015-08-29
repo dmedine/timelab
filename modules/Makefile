@@ -22,14 +22,14 @@ LIBS  =-ltimelab
 
  .SUFFIXES: .tl
 
- CFLAGS = -g -DPD -funroll-loops -fomit-frame-pointer -fPIC \
+ CFLAGS = -funroll-loops -fomit-frame-pointer -fPIC \
      -Wall -W -Wshadow -Wstrict-prototypes \
      -Wno-unused -Wno-parentheses -Wno-switch
 
 debug: $(CFLAGS) += -DDEBUG -O0
 debug: current
 
-release: $(CFLAGS) += -DTESTING -O2
+release: $(CFLAGS) += -g -DPD -DTESTING -O2
 release: current
 
 .c.tl:	 

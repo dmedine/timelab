@@ -278,9 +278,13 @@ tl_a_info tl_get_a_info(void){return tl_g_a_info;}
 
 void kill_procession(tl_procession *x){
 
+  // kill the controls first to avoid double free
   tl_kill_ctl_list(x->ctl_head);
-  tl_process_kill_list(x->class_head);
   kill_lvl_stck(x->lvl_stck);
+
+  // then kill the module list
+  tl_process_kill_list(x->class_head);
+
 
 }
 

@@ -29,12 +29,11 @@ tl_ctl *init_ctl(int type){
 
   x->name = NULL;
   x->bang_func = NULL;
-  x->ctl_kr = &foo_smp;
-  x->bang_go = &foo_int;
+  x->bang_data = NULL;
+  x->bang_go = 0;
   x->ctl_inlet = NULL;
   x->val_was = 0.0;
   x->val_is = 0.0;
-  x->outlet = NULL;
   x->is_verbose = 0;
 
   if(x->type == TL_LIN_CTL)
@@ -59,25 +58,6 @@ void kill_ctl(tl_ctl *x){
       free(x);
       x = NULL;
     }
-
-}
-
-// set the ctl input at control rate
-void set_ctl_kr(tl_ctl *x, tl_smp *val){
-
-  if(x->type == TL_LIN_CTL)
-    x->ctl_kr = val;
-  else
-    printf("could not set_ctl_kr: wrong ctl type\n");
-
-}
-
-void set_ctl_bang_go(tl_ctl *x, int *bang_go){
-
-  if(x->type == TL_BANG_CTL)
-    x->bang_go = bang_go;
-  else
-    printf("could not set_ctl_bang_go: wrong ctl type\n");
 
 }
 
@@ -110,11 +90,11 @@ void set_ctl_val(tl_ctl *x, tl_smp val){
     }
 
   set_sig_vals(x->outlet, val);
-  x->val_was = val;
+  x->val_was = x->val_is = val;
 
 }
 
-inline void interpolate_ctl_val(tl_ctl *x){
+inline void interpolate_ctl_val(tl_ctl *x, tl_lvl_stck *lvl_stck){
 
   tl_smp diff;
   tl_smp inc;
@@ -122,7 +102,7 @@ inline void interpolate_ctl_val(tl_ctl *x){
   int i;
 
 /* #ifdef TESTING */
-  printf("testing: enter interpolate_ctl_val\n");
+  //printf("testing: enter interpolate_ctl_val\n");
 /* #endif // TESTING */
 
   if(x->type==TL_LIN_CTL)
@@ -132,7 +112,8 @@ inline void interpolate_ctl_val(tl_ctl *x){
 	  printf("ERROR: in interpolate_ctl_val : no outlet available\n");
 	  return;
 	}
-      x->val_is = *x->ctl_kr;
+      //printf("interpolate_ctl_val val: %f %s %f %f\n", *x->ctl_kr, );
+      
       diff = x->val_is - x->val_was;
       val = x->val_was;
       inc = diff/x->outlet->smp_cnt;
@@ -140,6 +121,7 @@ inline void interpolate_ctl_val(tl_ctl *x){
       if(x->is_verbose==0)
 	for(i=0; i<x->outlet->smp_cnt; i++)
 	  {
+	    
 	    x->outlet->smps[i] = val;
 	    val += inc;
 	    
@@ -147,7 +129,7 @@ inline void interpolate_ctl_val(tl_ctl *x){
       else
 	for(i=0; i<x->outlet->smp_cnt; i++)
 	  {
-	    printf("ctl %s[%d} %f\n", x->name, i, val);
+	    printf("ctl %s[%d] %f\n", x->name, i, val);
 	    x->outlet->smps[i] = val;
 	    val += inc;
 	    
@@ -156,7 +138,7 @@ inline void interpolate_ctl_val(tl_ctl *x){
       x->val_was = x->val_is; // we must set all the values
       // in the outlet buffer to this value on the next tick
       // so, we push it onto this 'level off' stack
-      push_lvl_stck(get_g_lvl_stck(), x);
+      push_lvl_stck(lvl_stck, x);
     }
 }
 
@@ -171,11 +153,11 @@ inline void process_ctl_list(tl_ctl *head, tl_lvl_stck *lvl_stck){
       x=x->next;
       if(x->type == TL_LIN_CTL)
 	{
-	  if(*x->ctl_kr != x->val_was)
-	    interpolate_ctl_val(x);
+	  if(x->val_is != x->val_was)
+	    interpolate_ctl_val(x, lvl_stck);
 	}	 
       else if(x->type == TL_BANG_CTL)
-	if(*x->bang_go == 1)
+	if(x->bang_go == 1)
 	  {
 	    x->bang_func(x->bang_data);
 	    x->bang_go = 0;
@@ -197,26 +179,6 @@ void install_onto_ctl_list(tl_ctl *head, tl_ctl *x){
     }
   y->next = x;
 
-}
-
-void set_g_ctl_head(tl_ctl *x){
-
-  if(x!=NULL)
-    tl_g_ctl_head = x;
-  else
-    printf("error: set_g_ctl_head: argument is null\n");
-
-}
-
-tl_ctl *get_g_ctl_head(void){
-
-  if(tl_g_ctl_head != NULL)
-    return tl_g_ctl_head;
-  else
-    { 
-      printf("error get_g_ctl_head: head list is null\n");
-      return(NULL);
-    }
 }
 
 void tl_kill_ctl_list(tl_ctl *head){
@@ -319,24 +281,7 @@ inline void process_lvl_stck(tl_lvl_stck *x){
 	}
     }
   else
-    printf("error in g_lvl_stck: no lvl_stck provided\n");
+    printf("error in process_lvl_stck: no lvl_stck provided\n");
 
 }
 
-void set_g_lvl_stck(tl_lvl_stck *x){
-
-  tl_g_lvl_stck = x;
-
-}
-
-
-inline tl_lvl_stck *get_g_lvl_stck(void){
-
-  if(tl_g_lvl_stck != NULL)
-    return(tl_g_lvl_stck);
-  else
-    {
-      printf("error get_g_lvl_stck: tl_g_lvl_stck not set");
-      return (NULL);
-    }
-}

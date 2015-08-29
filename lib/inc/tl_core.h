@@ -200,12 +200,8 @@ extern "C" {
     void *bang_data; // we can pass it data if we wish
     
 
-    // this variable is the control rate interface to the
-    // outside world
-    tl_smp *ctl_kr;
-
     // this variable controls the bang function action
-    int *bang_go;
+    int bang_go;
 
     // if it is linearly interpolated
     // we need to know previous value,
@@ -230,15 +226,12 @@ extern "C" {
   tl_ctl *init_ctl(tl_ctl_t type);
   void kill_ctl(tl_ctl *x);
   
-  void set_ctl_kr(tl_ctl *x, tl_smp *val);
-  void set_ctl_bang_go(tl_ctl *x, int *bang_go);
   void set_ctl_bang_data(tl_ctl *x, void *data);
   
   // utility function
   // NOTE bad nomenclature
   void set_ctl_val(tl_ctl *x, tl_smp val);
   
-  inline void interpolate_ctl_val(tl_ctl *x);
   void install_onto_ctl_list(tl_ctl *head, tl_ctl *x);
   
   static tl_ctl *tl_g_ctl_head;
@@ -256,6 +249,8 @@ extern "C" {
     
   }tl_lvl_stck;
   
+  inline void interpolate_ctl_val(tl_ctl *x, tl_lvl_stck *lvl_stck);
+
   // needs to be intialized
   static tl_lvl_stck *tl_g_lvl_stck;
   tl_lvl_stck *init_lvl_stck(void);
@@ -327,6 +322,10 @@ extern "C" {
     tl_class *class_head;
     tl_ctl *ctl_head;
     tl_lvl_stck *lvl_stck;
+    // todo: implement this, requires fundamental
+    // restructuring
+    tl_audio_buff *ab_in;
+    tl_audio_buff *ab_out;
   }tl_procession;
 
   void kill_procession(tl_procession *x);

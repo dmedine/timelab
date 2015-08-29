@@ -4,7 +4,7 @@ vpath %.c src
 vpath %.h inc
 
 
-CFLAGS = -DPD -funroll-loops -fomit-frame-pointer -fPIC
+CFLAGS = -fPIC
 INCLUDE = -Iinc
 LIBPATH = -L/usr/lib -L/lib64 -L/usr/include -L/usr/local/include
 LIBS = -lportaudio -lm -lpthread #-ltimelab
@@ -22,9 +22,9 @@ OBJS = $(SRCS:.c=.o)
 all: libtimelab.a libtimelab.so
 #all: libtimelab.so
 
-debug: $(CFLAGS) += -DDEBUG -O0
+debug: $(CFLAGS) += -DDEBUG -O0 -DPD
 debug: all
-release: $(CFLAGS) += -DTESTING -g -O2
+release: $(CFLAGS) += -DTESTING -g -O2 -DPD -funroll-loops -fomit-frame-pointer
 release: all
 
 %.o: %.c

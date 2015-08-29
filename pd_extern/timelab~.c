@@ -9,6 +9,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#define MAX_TL_CTL 9999
+
 static t_class *timelab_tilde_class;
 t_sample foo;
 
@@ -25,8 +27,10 @@ typedef struct _timelab_tilde{
   tl_procession *procession;
   int in_cnt;
   int out_cnt;
+  int ctl_cnt;
   int total_sigs;
-
+  int block_len;
+  
 }t_timelab_tilde;
 
 static t_int *timelab_tilde_perform(t_int *w){
@@ -34,8 +38,9 @@ static t_int *timelab_tilde_perform(t_int *w){
   t_timelab_tilde *x = (t_timelab_tilde *)(w[1]);
   tl_audio_buff *ab;
   int i,j;
-  int n=(int)(w[2+x->total_sigs]); // get number of samples
-  //  printf("%d\n", n);
+  int advance = 0;
+  int n=(int)(w[3+x->total_sigs]); // get number of samples
+  //    printf("%d\n", n);
   t_sample *pd_buff_ptr;
 
   // make sure timelab has the right blocksize
@@ -43,43 +48,59 @@ static t_int *timelab_tilde_perform(t_int *w){
   //printf("%d\n",n);
   process_ctl_list(x->procession->ctl_head, x->procession->lvl_stck);
   
-  /* // write to global in bus for timelab (read by its adc) */
-  /* if(x->in_cnt>0) */
-  /*   { */
-  /*     ab=get_g_audio_buff_in(); */
-  /*     for(i=0;i<x->in_cnt; i++) */
-  /* 	{ */
-  /* 	  pd_buff_ptr = (t_sample *)w[i+2]; */
-  /* 	  for(j=0; j<n; j++) */
-  /* 	    ab->buff[i*n+j] = pd_buff_ptr[j]; */
-  /* 	} */
-  /*   } */
-
-  tl_process_dsp_list(n, x->procession->class_head);
+  // write to global in bus for timelab (read by its adc)
+  if(x->in_cnt>=1)
+    {
+      ab=get_g_audio_buff_in();
+      for(i=0;i<x->in_cnt; i++)
+  	{
+  	  pd_buff_ptr = (t_sample *)w[i+2];
+  	  for(j=0; j<n; j++)
+  	    ab->buff[i*n+j] = pd_buff_ptr[j];
+  	}
+    }
+  if(x->in_cnt == 0)advance = 1;
+    tl_process_dsp_list(n, x->procession->class_head);
   
-  /* // write out to timelab's global out bus (read from its dac) */
-  /* if(x->out_cnt>0) */
-  /*   { */
-  /*     ab=get_g_audio_buff_out(); */
-  /*     for(i=0;i<x->out_cnt; i++) */
-  /* 	{ */
-  /* 	  pd_buff_ptr = (t_sample *)w[i+2+x->in_cnt]; */
-  /* 	  for(j=0; j<n; j++) */
-  /* 	    { */
-  /* 	      pd_buff_ptr[j] = (t_sample)ab->buff[i*n+j]; */
-  /* 	      //	      printf("%f\n", ab->buff[0]); */
-  /* 	    } */
-  /* 	} */
-  /*   } */
+  // write out to timelab's global out bus (read from its dac)
+  if(x->out_cnt>0)
+    {
+      ab=get_g_audio_buff_out();
+      for(i=0;i<x->out_cnt; i++)
+  	{
+  	  pd_buff_ptr = (t_sample *)w[i+2+x->in_cnt+advance];
+	  for(j=0;j<n;j++)
+	    pd_buff_ptr[j] = (t_sample)ab->buff[i*n+j];
+ 	}
+    }
   //printf("3+x->total_sigs %d\n", 3+x->total_sigs);
-  return w+3+x->total_sigs;
+  return w+3+x->total_sigs+advance;
 }
 
 static void timelab_tilde_ctl(t_timelab_tilde *x, 
 			      t_floatarg who,
 			      t_floatarg what){
 
-  post("%f %f", who, what);
+
+  int who_int = (int)who;
+  tl_ctl *y = x->procession->ctl_head;
+  int i;
+  if(who_int<=x->ctl_cnt && who_int >0)  
+    {
+      for(i=0; i<who_int; i++)
+	y=y->next;
+      
+
+      if(y->type == TL_LIN_CTL)
+	y->val_is = what;
+      if(y->type == TL_BANG_CTL);
+      {
+	//	printf("hello from timelab_tilde_ctl\n"); 
+	y->bang_go = 1;
+      }
+  // post("%f %f", who, what);
+    }
+
 
 }
  
@@ -108,12 +129,11 @@ static void timelab_tilde_dsp(t_timelab_tilde *x, t_signal **sp){
 
   // generalize this for any number of ins and outs...
   dsp_add(timelab_tilde_perform, 
-	  6,
+	  5,
 	  x,
 	  sp[0]->s_vec,
 	  sp[1]->s_vec,
 	  sp[2]->s_vec,
-	  sp[3]->s_vec,
 	  sp[0]->s_n);
 
 }
@@ -122,11 +142,18 @@ static void *timelab_tilde_new(t_symbol *s, int argc, t_atom *argv){
 
   t_timelab_tilde *x = (t_timelab_tilde *)pd_new(timelab_tilde_class);
 
-  int i;
+  int i, j;
+
+  // todo: make this parametric
+  int block_len = 64;
 
   // get the sample rate correct
   tl_set_samplerate((int)sys_getsr());
-  
+
+  // set the block length
+  tl_set_block_len(block_len);
+  x->block_len = block_len;  
+
   // instantiate a gateway to timelab's scheduler
   x->procession = init_procession();
 
@@ -141,26 +168,41 @@ static void *timelab_tilde_new(t_symbol *s, int argc, t_atom *argv){
   tl_init_empty_sig();
 
   // load the requested module
-  t_symbol *arg = atom_getsymbolarg(0,argc,argv);
-  post("modname: %s\n", arg->s_name);
-  if((int)(x->class = tl_load_module(x->procession, arg->s_name))==-1)
+  t_symbol *mod_arg = atom_getsymbolarg(0,argc,argv);
+  // todo: generalize so that init arguments can be passed
+  post("modname: %s\n", mod_arg->s_name);
+  if((int)(x->class = tl_load_module(x->procession, mod_arg->s_name))==-1)
     {
-      post("tl_load_module failed: invalid tl file:\n%s", arg->s_name);
+      post("tl_load_module failed: invalid tl file:\n%s", mod_arg->s_name);
       goto end;
     }
+
+  // determine the number of controls
+  tl_ctl *y = x->procession->ctl_head;
+  i = 0;
+  while(y!=NULL)
+    {
+      y = y->next;
+      i++;
+    }
+  x->ctl_cnt = i-1;
+
   
   x->in_cnt = x->class->in_cnt;
   x->out_cnt = x->class->out_cnt;
   x->total_sigs = x->in_cnt + x->out_cnt;
   
   post("in_cnt %d\n", x->in_cnt);
-  for(i=0;i<x->in_cnt;i++)
+  // start count from 1 because we get one signal in no matter what
+  for(i=1;i<x->in_cnt;i++)
     inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal);
 
   post("out_cnt %d\n", x->out_cnt);
   for(i=0;i<x->out_cnt;i++)
     outlet_new(&x->x_obj, &s_signal);
-  foo = 0;
+  
+  post("total_sigs %d\n", x->total_sigs);
+  
   goto end;
 
  end:

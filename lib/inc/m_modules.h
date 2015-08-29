@@ -55,13 +55,11 @@ extern "C" {
     
   }tl_dac;
   
-  inline void tl_dsp_dac(int samples);
+  inline void tl_dsp_dac(int samples, void *mod);
   // this is special because there is only one dac
-  void tl_init_dac(int in_cnt, int up);
-  void tl_kill_dac(void);
-  void set_g_dac_in(int in, tl_sig *x);
-  tl_dac *tl_get_dac(void);
-  static tl_dac *tl_g_dac;
+  tl_dac *tl_init_dac(int in_cnt, int up);
+  void tl_kill_dac(tl_dac *x);
+
   
   
   //***************//
@@ -144,12 +142,14 @@ extern "C" {
     /* tl_sigs **outs; */
     /* int in_cnt; */
     /* int out_cnt; */
-    tl_ctl **ctls;
-    int ctl_cnt;
+    tl_ctl *ctls;
     tl_smp dx;
     tl_smp state;
     tl_smp out;
     tl_smp reset_state;
+
+    void *extra_data; // generic ptr for extra data
+    // this memory must be user handled on a case by case basis
 
     int stage; // which stage in the lopp
 
@@ -159,7 +159,7 @@ extern "C" {
 
 
   // 'constructor' and 'destructor'
-  tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int ctl_cnt, int up);
+  tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int up);
   void tl_reset_UDS_node(tl_UDS_node *x, tl_smp state);
   void tl_push_UDS_node(tl_UDS_node *x, tl_UDS_node *y);
   void tl_kill_UDS_node(tl_UDS_node *x);
@@ -185,7 +185,7 @@ extern "C" {
 
   }tl_UDS_solver;
 
-  inline void tl_dsp_UDS_solver(int samples, void *mod);
+  void tl_dsp_UDS_solver(int samples, void *mod);
   void *tl_init_UDS_solver(int ins, int outs, int up);
   void tl_kill_UDS_solver(void *mod);
 

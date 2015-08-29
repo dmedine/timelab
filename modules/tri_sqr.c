@@ -8,9 +8,10 @@ FILE *fp;
 #define DN 0
 
 static tl_UDS_solver *solver;
+static tl_dac *dac;
 static tl_UDS_node *node_sqr;
 static tl_UDS_node *node_tri;
-static tl_ctl *value;
+static tl_ctl *k_freq, *k_skew, *k_tanh_g, *k_reset;
 static tl_smp inv_cap = -100000.0;
 static tl_smp tri_thresh = .99;
 static tl_smp tanh_gain = 50.0;
@@ -20,8 +21,17 @@ static tl_smp g_freq = 480;
 
 // globals to pass to mother class
 int in_cnt = 0;
-int out_cnt = 4;
+int out_cnt = 2;
 void *ctls;
+
+void reset_oscs(void){
+
+
+  //printf("hello from reset_oscs\n");
+  tl_reset_UDS_node(solver->UDS_net, 0.0);
+  tl_reset_UDS_node(solver->UDS_net->next, 1.0);
+
+}
 
 tl_smp find_slope(tl_smp freq, tl_smp skew, int dir){
 
@@ -51,9 +61,17 @@ tl_smp tanh_clip_dash(tl_smp x, tl_smp g){
 tl_smp tri(tl_UDS_node *x, int iter){
 
   tl_smp out;
-  out = tanh_clip(*x->data_in[0], tanh_gain)*4*find_slope(g_freq, g_skew, slp_dir);
+  tl_smp freq, skew, tanh_g;
+
+  // grab the appropriate control value for this iteration
+  freq = k_freq->outlet->smps[iter];
+  skew = k_skew->outlet->smps[iter];
+  tanh_g = k_tanh_g->outlet->smps[iter];
+
+  // do the function
+  out = tanh_clip(*x->data_in[0], tanh_g)*4*find_slope(freq, skew, slp_dir);
   //out = tanh_clip(*x->data_in[0], 1.0)*4*440;
-  //     printf("tri in %f out %f\n", *x->data_in[0], out);
+  //  printf("tri in %f out %f freq %f skew %f tanh_g %f\n", *x->data_in[0], out, freq, skew, tanh_g);
   return out;
 }
 
@@ -87,14 +105,14 @@ void tl_init_tri_sqr(tl_arglist *args){
 
   node_tri = tl_init_UDS_node(tri, 
 			      2, 
-			      0,
+			      //0,
 			      1);
 
   tl_reset_UDS_node(node_tri, 0.0);
 
   node_sqr = tl_init_UDS_node(sqr, 
 			      4, //    
-			      0,
+			      //0,
 			      1);
   
   tl_reset_UDS_node(node_sqr, 1.0);
@@ -102,7 +120,7 @@ void tl_init_tri_sqr(tl_arglist *args){
   tl_push_UDS_node(solver->UDS_net, node_tri);
   tl_push_UDS_node(solver->UDS_net, node_sqr);  
   
-  tl_init_dac(2, 1); // this needs some more thought
+  dac=tl_init_dac(2, 1); // this needs some more thought
 
   node_tri->data_in[0] = node_sqr->data_out;
   
@@ -111,26 +129,44 @@ void tl_init_tri_sqr(tl_arglist *args){
   node_sqr->data_in[2] = &inv_cap;
   node_sqr->data_in[3] = &tanh_gain;
 
-  set_g_dac_in(0, solver->outlets[0]);
-  set_g_dac_in(1, solver->outlets[1]);
-  //  fp = fopen("tri_sqr_out", "w");
+  dac->inlets[0] = solver->outlets[0];
+  dac->inlets[1] = solver->outlets[1];
+  fp = fopen("tri_sqr_out", "w");
 
+  k_freq = init_ctl(TL_LIN_CTL);
+  k_freq->name = name_new("freq");
+  set_ctl_val(k_freq, 400);
 
-  value = init_ctl(TL_LIN_CTL);
-  value->name = name_new("value");
+  k_skew = init_ctl(TL_LIN_CTL);
+  k_skew->name = name_new("skew");
+  set_ctl_val(k_skew, .5);
+
+  k_tanh_g = init_ctl(TL_LIN_CTL);
+  k_tanh_g->name = name_new("tanh_g");
+  set_ctl_val(k_tanh_g, 50);
+
+  k_freq->next = k_skew; 
+  k_skew->next = k_tanh_g;
+
+  k_reset = init_ctl(TL_BANG_CTL);
+  k_reset->name = name_new("reset_oscs");
+  k_reset->bang_func = reset_oscs;
+  k_tanh_g->next = k_reset;
 
 }
 
 tl_ctl *tl_reveal_ctls_tri_sqr(void){
-  return value;
+  return k_freq;
 }
 
 void tl_kill_tri_sqr(tl_class *class_ptr){
 
-  tl_kill_UDS_solver(solver); // kills the nodes automatically
-  tl_kill_dac();
 
-  // fclose(fp);
+  printf("killing tri_sqr...\n");
+  tl_kill_UDS_solver(solver); // kills the nodes automatically
+  tl_kill_dac(dac);
+
+  fclose(fp);
 }
 
 void tl_dsp_tri_sqr(int samples, void *mod_ptr){
@@ -138,17 +174,15 @@ void tl_dsp_tri_sqr(int samples, void *mod_ptr){
   tl_smp atten = 0.0;
   int samps = samples;
   //printf("in dsp_tri_sqr %d\n",samples);
-  printf("%p\n",solver);
+  //  printf("%p\n",solver);
   tl_dsp_UDS_solver(samps, solver);
+  int i;
+  for(i=0;i<samps;i++)
+    {
 
-  /* for(i=0;i<samps;i++) */
-  /*   { */
+      fprintf(fp, "%f %f\n", solver->outlets[0]->smps[i], solver->outlets[1]->smps[i]);
+    }
 
-  /*   printf("%f %f\n", solver->outlets[0]->smps[i], solver->outlets[1]->smps[i]); */
-  /*   //    fprintf(fp, "%f %f\n", solver->outlets[0]->smps[i], solver->outlets[1]->smps[i]); */
-  /*   } */
-  /* scale_sig_vals(solver->outlets[0], &atten); */
-  /* scale_sig_vals(solver->outlets[1], &atten); */
-  tl_dsp_dac(samps);
+  tl_dsp_dac(samps, dac);
 
 }

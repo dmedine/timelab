@@ -72,11 +72,11 @@ tl_adc *tl_get_adc(void){
     //*************//
 
 
-inline void tl_dsp_dac(int samples){
+inline void tl_dsp_dac(int samples, void *mod){
 
   //  printf("in the dac... %d\n", samples);
   int i,s, j, buff_pos=0;
-  tl_dac *x = tl_get_dac();
+  tl_dac *x = (tl_dac *)mod;//tl_get_dac();
   s=samples;
   for(i=0; i<x->in_cnt; i++)
     {
@@ -95,87 +95,45 @@ inline void tl_dsp_dac(int samples){
 
 }
 
-void tl_init_dac(int in_cnt, int up){
+tl_dac *tl_init_dac(int in_cnt, int up){
 
   printf("creating dac...\n");
 
-  // think more about this policy
-  // later ...
-  // one idea is to have a module called dac_bus
-  // that simply looks like a [dac~] in Pd and directs
-  // its output to 'the' tl_dac
-  /* if(tl_dac_cnt > 0) */
-  /*   { */
-  /*     printf("error: tl_dac_init: only one dac allowed\n"); */
-  /*     return(NULL); */
-  /*   } */
+  tl_dac *x;
 
-  /* if(tl_arg_check((tl_arg_t *)args, dac_args)==0, 2) */
-  /*   goto sunk; */
+  x = (tl_dac *)malloc(sizeof(tl_dac));
 
-  tl_g_dac = (tl_dac *)malloc(sizeof(tl_dac));
+  x->inlets = init_sigs(in_cnt, TL_INLET, 1);
+  x->in_cnt = in_cnt;
 
-  /* tl_g_dac->dsp_func = &tl_dsp_dac; */
-  /* tl_g_dac->kill_func = &tl_kill_dac; */
+  x->sr = tl_get_samplerate();
 
-  /* tl_g_dac->dac_args = args; */
-  /* tl_g_dac->arg_cnt = 2; */
+  // rethink this and restructure so we can deal with multiple
+  // audio buffs
+  x->ab = get_g_audio_buff_out();
 
-  tl_g_dac->inlets = init_sigs(in_cnt, TL_INLET, 1);
-  tl_g_dac->in_cnt = in_cnt;
+  return x;
 
-  tl_g_dac->sr = tl_get_samplerate();
-
-  //tl_dac_cnt++;
-
-  
-  /* // again, we are presuming only one dac at a time ... */
-  /* set_g_out_chann_cnt(in_cnt); */
-  tl_g_dac->ab = get_g_audio_buff_out();
-  /* tl_g_dac->ab = init_audio_buff(in_cnt); */
-  /* set_g_audio_buff_out(tl_g_dac->ab); */
-
- /* sunk: */
- /*  printf("error: tl_dac_init: invalid arg list, could not create\n"); */
 
 }
 
-void tl_kill_dac(void){
+void tl_kill_dac(tl_dac *x){
   
   
-  if(tl_g_dac!=NULL)
+  if(x!=NULL)
     {
-      kill_inlets(tl_g_dac->inlets);
+      kill_inlets(x->inlets);
 
       /* if(tl_g_dac->ab!=NULL) */
       /* 	kill_audio_buff(tl_g_dac->ab); */
-      free(tl_g_dac);
-      tl_g_dac = NULL;
+      free(x);
+      x = NULL;
       //tl_dac_cnt--;
     }
   else printf("warning: tl_kill_dac: tl_g_dac does not (yet) exist\n");
 }
 
-void set_g_dac_in(int in, tl_sig *x){
 
-  if(in< tl_get_dac()->in_cnt && in >=0)
-    if(x!=NULL)
-      tl_get_dac()->inlets[in]=x;
-    else printf("error: set_g_dac_in: invalid sig ptr\n");
-  else printf("error: set_g_dac_in: invlaid in ref\n");
-
-}
-
-tl_dac *tl_get_dac(void){
-
-  if(tl_g_dac != NULL)
-    return tl_g_dac;
-  else
-    {
-      printf("error: tl_get_dac: tl_g_dac not initialized\n");
-      return NULL;
-    }
-}
 
     //***************//
     //     table     //
@@ -342,7 +300,7 @@ void tl_kill_lookup(void *mod){
 // all of this is hardcoded for Runge-Kutta
 // in future, add more solver options
 
-tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int ctl_cnt, int up){
+tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int up){
 
   int i;
 
@@ -367,8 +325,10 @@ tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int ctl_cnt, int up){
   /* x->outs = init_sigs(1, TL_OUTLET, 4*up);  */
   /* x->out_cnt = 1; */
   
-  x->ctls = malloc(sizeof(tl_ctl *) * ctl_cnt);
-  x->ctl_cnt = ctl_cnt;
+  x->ctls = NULL; // copy of ctls, for convenience...
+  //x->ctls = malloc(sizeof(tl_ctl *) * ctl_cnt);
+  //x->ctl_cnt = ctl_cnt;
+  x->extra_data = NULL;
   
   x->state = 0;
   x->next = NULL;
@@ -416,8 +376,8 @@ void tl_kill_UDS_node(tl_UDS_node *x){
 	}
 
 
-      for(i=0;i<x->ctl_cnt;i++)
-	kill_ctl(x->ctls[i]);      
+      /* for(i=0;i<x->ctl_cnt;i++) */
+      /* 	kill_ctl(x->ctls[i]);       */
 
       free(x);
       x = NULL;
@@ -444,11 +404,11 @@ void tl_kill_UDS_net(tl_UDS_node *x){
 
 
 // again, hardcoded for Runge-Kutta
-inline void tl_dsp_UDS_solver(int samples, void *mod){
+void tl_dsp_UDS_solver(int samples, void *mod){
 
   int i, j, k;
   tl_UDS_solver *x = (tl_UDS_solver *)mod;
-  printf("%p\n", x);
+  //printf("%p\n", x);
   tl_UDS_node *y;
   for(i=0; i<samples; i++)
     {
@@ -472,30 +432,31 @@ inline void tl_dsp_UDS_solver(int samples, void *mod){
   	  // now call the differential functions at each node
   	  y = x->UDS_net->next;
   	  while(y!=NULL)
-  	  	{
-  	      // evaluate the ODE at this stage
-  	      // use i for ctl referencing
-  	      y->ks[j+1] = y->func(y,i);
-
-  	      // if stage 4, solve it ...
-  	      if(j==3) // calculate the dx
-  	      	{
-  	      	  y->dx =  x->one_sixth * x->h_time *
-  	      	    (y->ks[1] +
-  	      	     (2*y->ks[2]) +
-  	      	     (2*y->ks[3]) +
-  	      	     y->ks[4]);
+	    {
+	      // printf("%d %d %d\n", i,j,k);
+	      // evaluate the ODE at this stage
+	      // use i for ctl referencing
+	      y->ks[j+1] = y->func(y,i);
+	      
+	      // if stage 4, solve it ...
+	      if(j==3) // calculate the dx
+		{
+		  y->dx =  x->one_sixth * x->h_time *
+		    (y->ks[1] +
+		     (2*y->ks[2]) +
+		     (2*y->ks[3]) +
+		     y->ks[4]);
 		  
-  	      	  // output new state and update
-  	      	  y->state = y->state + y->dx;
-  	      	  x->outlets[k++]->smps[i] = y->state;
-  	      	}
-  	      y=y->next;
-  	    }
-
-	  	  
+		  // output new state and update
+		  y->state = y->state + y->dx;
+		  x->outlets[k++]->smps[i] = y->state;
+		}
+	      y=y->next;
+	    }
+	  
+	  
   	}
-
+      
     }
 
 }
@@ -504,7 +465,7 @@ inline void tl_dsp_UDS_solver(int samples, void *mod){
 void *tl_init_UDS_solver(int ins, int outs, int up){
 
   tl_UDS_solver *x = malloc(sizeof(tl_UDS_solver));
-  x->UDS_net = tl_init_UDS_node(NULL, 0, 0, 1);
+  x->UDS_net = tl_init_UDS_node(NULL, 0, 1);//0, 1);
   
   x->in_cnt = ins;
   x->out_cnt = outs;
