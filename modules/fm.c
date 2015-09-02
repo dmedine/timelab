@@ -72,7 +72,7 @@ int check_sync_matrix(int which, int *armed){
   int i, j;
   int is_armed = 0;
   for(i=0;i<osc_cnt;i++)
-    if(sync_matrix[which][i] == 1)
+    if(sync_matrix[which][i] != 0.0)
       {
 	is_armed = 1;
 	armed[i] = 1;
@@ -82,10 +82,13 @@ int check_sync_matrix(int which, int *armed){
 }
 
 // ctl interface to set sync matrix
+// do we even need to call this?
 void set_sync_matrix(void *data){
 
-
-
+  int i, j;
+  for(i=0;i<osc_cnt;i++)
+    for(j=0;j<osc_cnt;j++)
+      printf("matrix %f\n",sync_matrix[i][j]);
 }
 
 // solves for sine part
@@ -219,12 +222,20 @@ tl_smp sync_func(tl_UDS_node *x, int iter){
 void tl_init_fm(tl_arglist *args){
 
   int i, j;
+  tl_procession *procession; // needed for DAC
+  // check for a procession in the args
+  if(args->argv[0]->type!=TL_PROCESSION)
+    {
+      printf("error: tl_init_fm : first init argument needs to be a valid procession pointer\n");
+      return;
+    }
+  else procession = args->argv[0]->procession;
 
   // initialize the solver
   solver = tl_init_UDS_solver(0, osc_cnt*2, 1);
 
   // we need a dac, so make one
-  dac = tl_init_dac(osc_cnt*2, 1);
+  dac = tl_init_dac(procession, osc_cnt*2, 1);
 
   // initialize the local ctl list head
   osc_head = init_ctl(TL_HEAD_CTL);
@@ -320,8 +331,8 @@ static tl_UDS_osc *init_UDS_osc(int which){
 
   x->b_sync_who = init_ctl(TL_BANG_CTL);
   sprintf(buf, "b_sync_who_%d", which);
-  x->b_sync_bang->name = name_new(buf);
-  set_ctl_bang_data(x->k_sync_bang, (void *)sync_matrix[which]);
+  x->b_sync_who->name = name_new(buf);
+  set_ctl_bang_data(x->b_sync_who, (void *)sync_matrix[which]);
   x->b_sync_who->bang_func = set_sync_matrix;
 
   // the other variables

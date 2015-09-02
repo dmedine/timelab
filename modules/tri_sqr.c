@@ -99,6 +99,16 @@ tl_smp sqr(tl_UDS_node *x, int iter){
 
 void tl_init_tri_sqr(tl_arglist *args){
 
+  tl_procession *procession; // needed for DAC
+  // check for a procession in the args
+  // this should never actually happen:
+  if(args->argv[0]->type!=TL_PROCESSION) 
+    {
+      printf("error: tl_init_dyfunc_test : first init argument needs to be a valid procession pointer\n");
+      return;
+    }
+  else procession = args->argv[0]->procession;
+
   solver = tl_init_UDS_solver(0, 
 			      2, 
 			      1);
@@ -120,7 +130,7 @@ void tl_init_tri_sqr(tl_arglist *args){
   tl_push_UDS_node(solver->UDS_net, node_tri);
   tl_push_UDS_node(solver->UDS_net, node_sqr);  
   
-  dac=tl_init_dac(2, 1); // this needs some more thought
+  dac=tl_init_dac(procession, 2, 1); // this needs some more thought
 
   node_tri->data_in[0] = node_sqr->data_out;
   

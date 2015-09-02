@@ -80,12 +80,17 @@ extern "C" {
   //      tl_args      // 
   //*******************//
 
+  // we actually define this later, but we need it now
+  struct _processsion;
+#define tl_procession struct _procession
+  //typedef tl_stuff tl_procession;
   // timelab argument parser
   typedef enum{
     TL_INT,
     TL_FLOAT,
     TL_STR,
-    TL_FAIL
+    TL_FAIL,
+    TL_PROCESSION
   }tl_arg_t;
   
 #define TLMAXARG 50
@@ -95,6 +100,7 @@ extern "C" {
     char str_val[256]; // this needs to be appropriately cast
     int i_val;
     float f_val;
+    tl_procession *procession;
   }tl_arg;
   
   typedef struct _arglist{
@@ -119,7 +125,8 @@ extern "C" {
   
   struct _class;
 #define tl_class struct _class
-  typedef tl_class *tl;
+  //typedef tl_class *tl;
+
   
   // class function prototypes:
   typedef void (*tl_dsp_func)(int samples, void *mod_ptr);
@@ -326,7 +333,7 @@ extern "C" {
     // restructuring
     tl_audio_buff *ab_in;
     tl_audio_buff *ab_out;
-  }tl_procession;
+  };
 
   void kill_procession(tl_procession *x);
   tl_procession *init_procession(void);  

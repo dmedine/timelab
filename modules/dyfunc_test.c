@@ -4,6 +4,7 @@
 static tl_UDS_solver *solver;
 static tl_UDS_node *node_x;
 static tl_UDS_node *node_y;
+static tl_dac *dac;
 
 tl_smp x_dot(tl_UDS_node *x, int iter){
 
@@ -26,19 +27,27 @@ tl_smp y_dot(tl_UDS_node *x, int iter){
 
 void tl_init_dyfunc_test(tl_arglist *args){
 
+  tl_procession *procession; // needed for DAC
+  // check for a procession in the args
+  // this should never actually happen:
+  if(args->argv[0]->type!=TL_PROCESSION) 
+    {
+      printf("error: tl_init_dyfunc_test : first init argument needs to be a valid procession pointer\n");
+      return;
+    }
+  else procession = args->argv[0]->procession;
+
   solver = tl_init_UDS_solver(0, 
 			      2, 
 			      1);
 
   node_x = tl_init_UDS_node(x_dot, 
-			    1, 
 			    0,
 			    1);
 
   tl_reset_UDS_node(node_x, 0.0);
 
   node_y = tl_init_UDS_node(y_dot, 
-			    1, 
 			    0,
 			    1);
 
@@ -47,20 +56,22 @@ void tl_init_dyfunc_test(tl_arglist *args){
   tl_push_UDS_node(solver->UDS_net, node_x);
   tl_push_UDS_node(solver->UDS_net, node_y);  
   
-  tl_init_dac(2, 1); // this needs some more thought
 
   node_x->data_in[0] = node_y->data_out;
   node_y->data_in[0] = node_x->data_out;
 
-  set_g_dac_in(0, solver->outlets[0]);
-  set_g_dac_in(1, solver->outlets[1]);
+  // we need a dac, so make one
+  dac = tl_init_dac(procession, 2, 1);
+
+  dac->inlets[0] = solver->outlets[0];
+  dac->inlets[1] = solver->outlets[1];
 
 }
 
 void tl_kill_dyfunc_test(tl_class *class_ptr){
 
   tl_kill_UDS_solver(solver); // kills the nodes automatically
-  tl_kill_dac();
+  tl_kill_dac(dac);
 
 }
 
@@ -80,6 +91,6 @@ void tl_dsp_dyfunc_test(int samples, void *mod_ptr){
   scale_sig_vals(solver->outlets[1], &atten);
   /* for(i=0;i<samps;i++) */
   /*   printf("%d %f\n", i, solver->outlets[0]->smps[i]); */
-  tl_dsp_dac(samps);
+  tl_dsp_dac(samps, dac);
 
 }

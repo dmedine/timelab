@@ -22,9 +22,9 @@ OBJS = $(SRCS:.c=.o)
 all: libtimelab.a libtimelab.so
 #all: libtimelab.so
 
-debug: $(CFLAGS) += -DDEBUG -O0 -DPD
+debug: $(CFLAGS) += -DDEBUG -O0 -g3 -DPD
 debug: all
-release: $(CFLAGS) += -DTESTING -g -O2 -DPD -funroll-loops -fomit-frame-pointer
+release: $(CFLAGS) += -DTESTING -O2 -DPD -funroll-loops -fomit-frame-pointer
 release: all
 
 %.o: %.c
@@ -36,7 +36,7 @@ libtimelab.a: $(OBJS)
 	#mv *.o $(OBJ_PATH)
 
 libtimelab.so: $(OBJS)
-	$(CC) -shared -Wl,-soname,libtimelab.so \
+	$(CC) -shared -g3 -fPIC -Wl,-soname,libtimelab.so \
 	-o libtimelab.so $(OBJS) -lc
 	mv libtimelab.so ./bin
 	mv *.o $(OBJ_PATH)

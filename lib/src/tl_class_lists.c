@@ -25,6 +25,15 @@ tl_class *x = (tl_class *)malloc(sizeof(tl_class));
 
 //void kill_class_list(tl_class_list *x){
 void kill_class(tl_class *x){
+
+
+  if(x->mod!=NULL)
+    {
+      free(x->mod);
+      x->mod = NULL;
+    }
+
+
   if(x!=NULL)
     {
       //printf("killing class %s\n", (char *)x->name);

@@ -32,10 +32,10 @@ void tl_audio_init(void){
       //pa_audio_on();
 
       // initialize the global audio buffers 
-      tl_g_audio_buff_out = init_audio_buff(TL_MAXCHANNS);
-      set_g_audio_buff_out(tl_g_audio_buff_out);
-      tl_g_audio_buff_in = init_audio_buff(TL_MAXCHANNS);
-      set_g_audio_buff_in(tl_g_audio_buff_in);
+      /* tl_g_audio_buff_out = init_audio_buff(TL_MAXCHANNS); */
+      /* set_g_audio_buff_out(tl_g_audio_buff_out); */
+      /* tl_g_audio_buff_in = init_audio_buff(TL_MAXCHANNS); */
+      /* set_g_audio_buff_in(tl_g_audio_buff_in); */
   
      // initialize the empty signal 
       tl_kill_empty_sig(); // make sure it's dead
@@ -59,10 +59,10 @@ void tl_exit(void){
   /* // and its level stack */
   /* kill_g_lvl_stck(get_g_lvl_stck()); */
 
-  if(get_g_audio_buff_out()!=NULL)
-      kill_audio_buff(get_g_audio_buff_out());
-  if(get_g_audio_buff_in()!=NULL)
-      kill_audio_buff(get_g_audio_buff_in());
+  /* if(get_g_audio_buff_out()!=NULL) */
+  /*     kill_audio_buff(get_g_audio_buff_out()); */
+  /* if(get_g_audio_buff_in()!=NULL) */
+  /*     kill_audio_buff(get_g_audio_buff_in()); */
 
 
 }

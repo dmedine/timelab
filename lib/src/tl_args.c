@@ -88,7 +88,7 @@ static void got_one(tl_arglist *args, char *buff, int len){
 
   for(i=0;i<len; i++)
     chars[i] = buff[i];
-
+  printf("args->argc %d", args->argc);
   // alocate memory for the current arg
   args->argv[args->argc] = (tl_arg *)malloc(sizeof(tl_arg));
   if(chars[0]>='0'&&chars[0]<='9'||chars[0]=='-'&&chars[1]>='0'&&chars[1]<='9')

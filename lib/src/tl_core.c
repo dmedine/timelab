@@ -285,6 +285,11 @@ void kill_procession(tl_procession *x){
   // then kill the module list
   tl_process_kill_list(x->class_head);
 
+  kill_audio_buff(x->ab_in);
+  kill_audio_buff(x->ab_out);
+
+  free(x);
+  x=NULL;
 
 }
 
@@ -294,6 +299,8 @@ tl_procession *init_procession(void){
   x->class_head = init_class();
   x->ctl_head = init_ctl(TL_HEAD_CTL);
   x->lvl_stck = init_lvl_stck();
+  x->ab_in = init_audio_buff(TL_MAXCHANNS);
+  x->ab_out = init_audio_buff(TL_MAXCHANNS);
   return x;
 
 }
@@ -344,21 +351,26 @@ tl_class *tl_load_module(tl_procession *procession, const char *arg_str){
   int mod_name_len;
   int i;
 
-  arglist.argc = 0; // perhaps we should init/kill these
-  // for now, this initialization is necessary...
-
-  // parse the creation string into arguments
+  // we *ALWAYS* pass the procession as the first argument
+  // so plug it into the arglist
+  arglist.argc = 1;
+  arglist.argv[0] = (tl_arg *)malloc(sizeof(tl_arg));
+  arglist.argv[0]->procession = procession;
+  arglist.argv[0]->type = TL_PROCESSION;
+ 
+ // parse the creation string into arguments
   tl_parse_args(&arglist, arg_str);
-
+  
   // first arg is the full path to the module
-  mod_name = cpy_file_name_no_path(arglist.argv[0]->str_val); 
+  mod_name = cpy_file_name_no_path(arglist.argv[1]->str_val);
+  printf("module name copied: %s\n%s\n",arglist.argv[1]->str_val, mod_name);
 
   // concoct the init function name
   mod_name_len = strlen(mod_name);
-
+ 
   init_name = malloc(sizeof(char) * (strlen(init_affix) + mod_name_len +1));
   strcpy(init_name, init_affix);
-  init_name[strlen(init_affix)]='\0'; 
+  init_name[strlen(init_affix)]='\0';
   strcat(init_name, mod_name);// correct?
 
   kill_name = malloc( sizeof(char) *(strlen(kill_affix) + mod_name_len));
@@ -375,13 +387,14 @@ tl_class *tl_load_module(tl_procession *procession, const char *arg_str){
 
 
   // dlopen the module
-  handle = dlopen(arglist.argv[0]->str_val, RTLD_LAZY | RTLD_GLOBAL);
+  handle = dlopen(arglist.argv[1]->str_val, RTLD_LAZY | RTLD_GLOBAL);
   printf("%d\n",handle);
-  if(!handle) 
+  printf("next tl_load_module %p\n",procession);
+  if(!handle)
     {
       printf("error: tl_load_module: dlopen did return valid file handle\n");
       goto fail;// TODO: check this
-    }  
+    }
   x = init_class();
 
   // get the functions we want
@@ -435,12 +448,11 @@ goto fail;
 
   // intialize the module
   x->args = &arglist;
-  // this is now done when the class is initialized  
-  //x->init_func(&arglist); // TODO: check for errors
+  // TODO: check to see that args are properly destroyed
 
-  // get the dsp and kill functions and push them onto the stack
-  // this also initializes the module -- we need to do this before passing the ctl pointer to the ctl list
-  tl_install_class(procession->class_head, x);  
+  // this installs the class onto the procession class stack
+  // it also initializes the module itself
+  tl_install_class(procession->class_head, x);
 
   // install ctls if any
   if(ctls_func != NULL)
@@ -451,10 +463,15 @@ goto fail;
   free(kill_name);
   free(dsp_name);
   free(ctls_name);
+
+  // free the args we created (this doesn't destroy the procession that we use in the first arg, just the container that points to it)
+  for(i=0;i<arglist.argc;i++)
+    free(arglist.argv[i]);
+
   return x;
  fail:
   printf("error: tl_load_module: module was invalid\n");
-  return -1;
+  return NULL;
 
 }
 

@@ -95,7 +95,7 @@ inline void tl_dsp_dac(int samples, void *mod){
 
 }
 
-tl_dac *tl_init_dac(int in_cnt, int up){
+tl_dac *tl_init_dac(tl_procession *procession, int in_cnt, int up){
 
   printf("creating dac...\n");
 
@@ -110,7 +110,7 @@ tl_dac *tl_init_dac(int in_cnt, int up){
 
   // rethink this and restructure so we can deal with multiple
   // audio buffs
-  x->ab = get_g_audio_buff_out();
+  x->ab = procession->ab_out;
 
   return x;
 

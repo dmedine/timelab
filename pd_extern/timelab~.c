@@ -25,10 +25,15 @@ typedef struct _timelab_tilde{
 
   tl_class *class;
   tl_procession *procession;
+
+  // thanks, IOhannes, for how to do this
+  // https://svn.code.sf.net/p/pure-data/svn/trunk/externals/iem/iemmatrix/src/mtx_mul~.c
+  t_float **io;
+
   int in_cnt;
   int out_cnt;
   int ctl_cnt;
-  int total_sigs;
+  int n_sigs;
   int block_len;
   
 }t_timelab_tilde;
@@ -39,42 +44,40 @@ static t_int *timelab_tilde_perform(t_int *w){
   tl_audio_buff *ab;
   int i,j;
   int advance = 0;
-  int n=(int)(w[3+x->total_sigs]); // get number of samples
-  //    printf("%d\n", n);
+  int n=(int)(w[2]); // get number of samples
   t_sample *pd_buff_ptr;
+  t_float **io = x->io;
 
-  // make sure timelab has the right blocksize
 
-  //printf("%d\n",n);
   process_ctl_list(x->procession->ctl_head, x->procession->lvl_stck);
   
   // write to global in bus for timelab (read by its adc)
   if(x->in_cnt>=1)
     {
-      ab=get_g_audio_buff_in();
+      ab=x->procession->ab_in;
       for(i=0;i<x->in_cnt; i++)
   	{
-  	  pd_buff_ptr = (t_sample *)w[i+2];
+  	  pd_buff_ptr = (t_sample *)io[i];
   	  for(j=0; j<n; j++)
   	    ab->buff[i*n+j] = pd_buff_ptr[j];
   	}
     }
-  if(x->in_cnt == 0)advance = 1;
-    tl_process_dsp_list(n, x->procession->class_head);
+
+  tl_process_dsp_list(n, x->procession->class_head);
   
   // write out to timelab's global out bus (read from its dac)
   if(x->out_cnt>0)
     {
-      ab=get_g_audio_buff_out();
+      ab=x->procession->ab_out;
       for(i=0;i<x->out_cnt; i++)
   	{
-  	  pd_buff_ptr = (t_sample *)w[i+2+x->in_cnt+advance];
+  	  pd_buff_ptr = (t_sample *)io[i+x->in_cnt];
 	  for(j=0;j<n;j++)
 	    pd_buff_ptr[j] = (t_sample)ab->buff[i*n+j];
  	}
     }
-  //printf("3+x->total_sigs %d\n", 3+x->total_sigs);
-  return w+3+x->total_sigs+advance;
+
+  return w+3;
 }
 
 static void timelab_tilde_ctl(t_timelab_tilde *x, 
@@ -98,7 +101,6 @@ static void timelab_tilde_ctl(t_timelab_tilde *x,
 	//	printf("hello from timelab_tilde_ctl\n"); 
 	y->bang_go = 1;
       }
-  // post("%f %f", who, what);
     }
 
 
@@ -125,15 +127,16 @@ static void timelab_tilde_list_ctl(t_timelab_tilde *x){
 
 static void timelab_tilde_dsp(t_timelab_tilde *x, t_signal **sp){
 
-  //tl_set_samplerate(sp[0]->s_sr);
 
-  // generalize this for any number of ins and outs...
+  int i;
+  int advance = (x->in_cnt!=0)?0:1;
+
+  for(i=0;i<x->n_sigs;i++)
+    x->io[i] = sp[i+advance]->s_vec;
+
   dsp_add(timelab_tilde_perform, 
-	  5,
+	  2,
 	  x,
-	  sp[0]->s_vec,
-	  sp[1]->s_vec,
-	  sp[2]->s_vec,
 	  sp[0]->s_n);
 
 }
@@ -156,13 +159,7 @@ static void *timelab_tilde_new(t_symbol *s, int argc, t_atom *argv){
 
   // instantiate a gateway to timelab's scheduler
   x->procession = init_procession();
-
-  // initialize the global audio buffers 
-  tl_g_audio_buff_out = init_audio_buff(TL_MAXCHANNS);
-  set_g_audio_buff_out(tl_g_audio_buff_out);
-  tl_g_audio_buff_in = init_audio_buff(TL_MAXCHANNS);
-  set_g_audio_buff_in(tl_g_audio_buff_in);
-
+ 
   // initialize the empty signal 
   tl_kill_empty_sig(); // make sure it's dead
   tl_init_empty_sig();
@@ -171,7 +168,7 @@ static void *timelab_tilde_new(t_symbol *s, int argc, t_atom *argv){
   t_symbol *mod_arg = atom_getsymbolarg(0,argc,argv);
   // todo: generalize so that init arguments can be passed
   post("modname: %s\n", mod_arg->s_name);
-  if((int)(x->class = tl_load_module(x->procession, mod_arg->s_name))==-1)
+  if(!(x->class = tl_load_module(x->procession, mod_arg->s_name)))
     {
       post("tl_load_module failed: invalid tl file:\n%s", mod_arg->s_name);
       goto end;
@@ -190,7 +187,9 @@ static void *timelab_tilde_new(t_symbol *s, int argc, t_atom *argv){
   
   x->in_cnt = x->class->in_cnt;
   x->out_cnt = x->class->out_cnt;
-  x->total_sigs = x->in_cnt + x->out_cnt;
+  x->n_sigs = x->in_cnt + x->out_cnt;
+
+  x->io = (t_float **)getbytes(x->n_sigs * sizeof(t_float *));
   
   post("in_cnt %d\n", x->in_cnt);
   // start count from 1 because we get one signal in no matter what
@@ -201,7 +200,7 @@ static void *timelab_tilde_new(t_symbol *s, int argc, t_atom *argv){
   for(i=0;i<x->out_cnt;i++)
     outlet_new(&x->x_obj, &s_signal);
   
-  post("total_sigs %d\n", x->total_sigs);
+  post("n_sigs %d\n", x->n_sigs);
   
   goto end;
 
@@ -215,10 +214,7 @@ static void timelab_tilde_free(t_timelab_tilde *x){
 
   kill_procession(x->procession);
 
-  if(get_g_audio_buff_out()!=NULL)
-      kill_audio_buff(get_g_audio_buff_out());
-  if(get_g_audio_buff_in()!=NULL)
-      kill_audio_buff(get_g_audio_buff_in());
+  freebytes(x->io, (x->n_sigs * sizeof(t_float *))); 
 
   
 }

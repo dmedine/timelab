@@ -74,7 +74,7 @@ pd_linux: $(NAME).pd_linux
 
 .SUFFIXES: .pd_linux
 
-LINUXCFLAGS = -DPD -O2 -funroll-loops -fomit-frame-pointer  -fPIC \
+LINUXCFLAGS = -DPD -O0 -g3 -funroll-loops -fomit-frame-pointer  -fPIC \
     -Wall -W -Wshadow -Wstrict-prototypes \
     -Wno-unused -Wno-parentheses -Wno-switch $(CFLAGS) \
     -shared -Wl,rpath=$(TLLIBPATH)

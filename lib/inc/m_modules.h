@@ -57,7 +57,7 @@ extern "C" {
   
   inline void tl_dsp_dac(int samples, void *mod);
   // this is special because there is only one dac
-  tl_dac *tl_init_dac(int in_cnt, int up);
+  tl_dac *tl_init_dac(tl_procession *procession, int in_cnt, int up);
   void tl_kill_dac(tl_dac *x);
 
   
