@@ -388,8 +388,6 @@ tl_class *tl_load_module(tl_procession *procession, const char *arg_str){
 
   // dlopen the module
   handle = dlopen(arglist.argv[1]->str_val, RTLD_LAZY | RTLD_GLOBAL);
-  printf("%d\n",handle);
-  printf("next tl_load_module %p\n",procession);
   if(!handle)
     {
       printf("error: tl_load_module: dlopen did return valid file handle\n");

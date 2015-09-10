@@ -159,8 +159,14 @@ inline void process_ctl_list(tl_ctl *head, tl_lvl_stck *lvl_stck){
       else if(x->type == TL_BANG_CTL)
 	if(x->bang_go == 1)
 	  {
-	    x->bang_func(x->bang_data);
-	    x->bang_go = 0;
+	    if(x->bang_func== NULL)
+	      printf("process_ctl_list: warning: control %s has no bang function attached\n", x->name);
+	    else
+	      {
+		//printf("process_ctl_list: bang data %p\n", x->bang_data);
+		x->bang_func(x->bang_data);
+		x->bang_go = 0;
+	      }
 	  }
     }
 

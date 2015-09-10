@@ -5,10 +5,10 @@
     //*************//
     //     ADC     //
     //*************//
-inline void tl_dsp_adc(int samples){
+inline void tl_dsp_adc(int samples, void *mod){
 
   int i,s, j, buff_pos=0;
-  tl_adc *x = tl_get_adc();
+  tl_adc *x = (tl_adc *)mod;
   s=samples;
   for(i=0; i<x->out_cnt; i++)
     {
@@ -16,7 +16,7 @@ inline void tl_dsp_adc(int samples){
 	{
 	  x->outlets[i]->smps[j] = 
 	    x->ab->buff[buff_pos++]; 
-	    
+	  //printf("tl_dsp_adc: i=%d j=%d %f\n", i,j,x->outlets[i]->smps[j]); 
 
 	  /* if(x->ab->buff_pos_w >= x->ab->buff_len) */
 	  /*   x->ab->buff_pos_w -= x->ab->buff_len; */
@@ -26,46 +26,38 @@ inline void tl_dsp_adc(int samples){
 
 }
 
-void tl_init_adc(int out_cnt, int up){
+tl_adc *tl_init_adc(tl_procession *procession, int out_cnt, int up){
 
   printf("creating adc...\n");
+  tl_adc *x;
+  x = (tl_adc *)malloc(sizeof(tl_adc));
 
-  tl_g_adc = (tl_adc *)malloc(sizeof(tl_adc));
+  x->outlets = init_sigs(out_cnt, TL_OUTLET, 1);
+  x->out_cnt = out_cnt;
+  x->in_cnt = 0;
 
-  tl_g_adc->outlets = init_sigs(out_cnt, TL_OUTLET, 1);
-  tl_g_adc->out_cnt = out_cnt;
-  tl_g_adc->in_cnt = 0;
+  x->sr = tl_get_samplerate();
 
-  tl_g_adc->sr = tl_get_samplerate();
+  x->ab = procession->ab_in;
 
-  tl_g_adc->ab = get_g_audio_buff_in();
+  return x;
 
 }
 
-void tl_kill_adc(void){
+void tl_kill_adc(tl_adc *x){
   
   
-  if(tl_g_adc!=NULL)
+  if(x!=NULL)
     {
-      kill_outlets(tl_g_adc->outlets, tl_g_adc->out_cnt);
+      kill_outlets(x->outlets, x->out_cnt);
 
-      free(tl_g_adc);
-      tl_g_adc = NULL;
+      free(x);
+      x = NULL;
 
     }
-  else printf("warning: tl_kill_adc: tl_g_adc does not (yet) exist\n");
+  else printf("warning: tl_kill_adc: invalid adc ptr\n");
 }
 
-tl_adc *tl_get_adc(void){
-
-  if(tl_g_adc != NULL)
-    return tl_g_adc;
-  else
-    {
-      printf("error: tl_get_dac: tl_g_dac not initialized\n");
-      return NULL;
-    }
-}
 
     //*************//
     //     DAC     //
@@ -130,7 +122,7 @@ void tl_kill_dac(tl_dac *x){
       x = NULL;
       //tl_dac_cnt--;
     }
-  else printf("warning: tl_kill_dac: tl_g_dac does not (yet) exist\n");
+  else printf("warning: tl_kill_dac: invalid dac ptr\n");
 }
 
 
@@ -316,18 +308,11 @@ tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int up){
   for(i=0; i<in_cnt; i++)
       x->data_in[i] = NULL;
 
-
   x->in_cnt = in_cnt; 
   
   *x->data_out = 0.0;
-  /* x->ins = init_sigs(in_cnt, TL_INLET, 4*up); */
-  /* x->in_cnt = in_cnt; */
-  /* x->outs = init_sigs(1, TL_OUTLET, 4*up);  */
-  /* x->out_cnt = 1; */
   
   x->ctls = NULL; // copy of ctls, for convenience...
-  //x->ctls = malloc(sizeof(tl_ctl *) * ctl_cnt);
-  //x->ctl_cnt = ctl_cnt;
   x->extra_data = NULL;
   
   x->state = 0;
@@ -338,19 +323,18 @@ tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int up){
 
 void tl_reset_UDS_node(tl_UDS_node *x, tl_smp state){
 
-  int i;
+  int i, j, k;
   x->state = state;
   for(i=0; i<5; i++)
     x->ks[i] = 0;
-  /* for(i=0;i<x->in_cnt;i++) */
-  /*   x->data_in[i] = NULL; */
+  /* for(j=0;j<x->in_cnt;j++) */
+  /*   *x->data_in[j] = 0.0; */
   *x->data_out = 0.0;
 }
 
 // theoretically, the order doesn't matter 
 // so we can just push and pop at will
 void tl_push_UDS_node(tl_UDS_node *x, tl_UDS_node *y){
-
 
   while(x->next!=NULL)x=x->next;
   x->next = y;
@@ -425,7 +409,7 @@ void tl_dsp_UDS_solver(int samples, void *mod){
   	    {
   	    // push the current RK stage datum
   	      *y->data_out = y->state + (x->mult[j] * y->ks[j]);
-  	      // printf("y %p data_out %f  state %f :: ", y, *y->data_out, y->state);
+	      // printf("y %p data_out %f  state %f :: ", y, *y->data_out, y->state);
   	      y=y->next;
   	    }
 

@@ -141,7 +141,7 @@ void tl_init_tri_sqr(tl_arglist *args){
 
   dac->inlets[0] = solver->outlets[0];
   dac->inlets[1] = solver->outlets[1];
-  fp = fopen("tri_sqr_out", "w");
+  //fp = fopen("tri_sqr_out", "w");
 
   k_freq = init_ctl(TL_LIN_CTL);
   k_freq->name = name_new("freq");
@@ -176,7 +176,7 @@ void tl_kill_tri_sqr(tl_class *class_ptr){
   tl_kill_UDS_solver(solver); // kills the nodes automatically
   tl_kill_dac(dac);
 
-  fclose(fp);
+  //  fclose(fp);
 }
 
 void tl_dsp_tri_sqr(int samples, void *mod_ptr){
@@ -187,12 +187,13 @@ void tl_dsp_tri_sqr(int samples, void *mod_ptr){
   //  printf("%p\n",solver);
   tl_dsp_UDS_solver(samps, solver);
   int i;
-  for(i=0;i<samps;i++)
-    {
+  /* for(i=0;i<samps;i++) */
+  /*   { */
 
-      fprintf(fp, "%f %f\n", solver->outlets[0]->smps[i], solver->outlets[1]->smps[i]);
-    }
+  /*     fprintf(fp, "%f %f\n", solver->outlets[0]->smps[i], solver->outlets[1]->smps[i]); */
+  /*   } */
 
   tl_dsp_dac(samps, dac);
 
 }
+

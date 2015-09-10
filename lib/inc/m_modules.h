@@ -26,14 +26,11 @@ extern "C" {
     tl_name *name;
     
   }tl_adc;
-  inline void tl_dsp_adc(int samples);
+
+  inline void tl_dsp_adc(int samples, void *mod);
   // this is special because there is only one dac
-  void tl_init_adc(int in_cnt, int up);
-  void tl_kill_adc(void);
-  void set_g_adc_in(int in, tl_sig *x);
-  tl_adc *tl_get_adc(void);
-  static tl_adc *tl_g_adc;
-    
+  tl_adc *tl_init_adc(tl_procession *procession, int in_cnt, int up);
+  void tl_kill_adc(tl_adc *x);
 
     //*************//
     //     DAC     //
