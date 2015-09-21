@@ -42,7 +42,7 @@ static t_tlsmp swth_func(t_tlsmp freq, t_tlsmp thresh, t_tlsmp state){
 static t_tlsmp diff(t_tlsmp alpha, t_tlsmp *data){
 
   t_tlsmp out;
-  out = alpha * tanh((data[0] - data[1]));
+  out = alpha * (tanh(data[0]) - tanh(data[1]));
   return out;
 
 }

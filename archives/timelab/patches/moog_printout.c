@@ -43,7 +43,7 @@ static t_tlsmp swth_func(t_tlsmp freq, t_tlsmp thresh, t_tlsmp state){
 static t_tlsmp diff(t_tlsmp alpha, t_tlsmp *data){
 
   t_tlsmp out;
-  out = alpha * tanh((data[0] - data[1]));
+  out = alpha * (tanh(data[0]) - tanh(data[1]) );
   return out;
 
 }
@@ -78,8 +78,8 @@ static void rk_moog_func(int samples, void *ptr, t_tlsmp *input){
 
 	  //now the filter
 	  //stage 1 is unique
-	  data[0] = imp - 
-	    //.5 *x->i_sigs[0]->s_block[i] -
+	  //data[0] = imp - 
+	    .5 *x->i_sigs[0]->s_block[i] -
 	    //    swth_amp * x->rk_children[4]->state+//swth input
 	    //n_amp * x->i_sigs[0]->s_block[i] - 
 	    res * rk_child_stage(j, x->rk_children[3]);
@@ -121,7 +121,7 @@ static void rk_moog_func(int samples, void *ptr, t_tlsmp *input){
 
 void setup_this(void){
 
-  noise_amp = 0.0;
+  noise_amp = 1.0;
   r_val = 4.0;
   g_val = 100.0;
   cntr = 0;
@@ -169,7 +169,7 @@ void dsp_chain(int samples,
 	       t_tlsig **dac_sigs){
 
   int i, j, stall= 0;
-  float cap = 4000.0;
+  float cap = 10000.0;
   int s = samples;
 
 

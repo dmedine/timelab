@@ -18,6 +18,8 @@ tl_ctl *ctls;
 tl_ctl *b_reset;
 tl_ctl *k_cutoff;
 tl_ctl *k_res;
+tl_ctl *k_sat;
+
 
 // reset function to bang
 void reset(void){
@@ -35,10 +37,10 @@ int i;
 
 
 // define any clipping function...
-static tl_smp clip(tl_smp data){
+static tl_smp clip(tl_smp data, tl_smp sat, tl_smp satinv){
 
 
-  return tanh(data);
+  return sat * tanh(data*satinv);
 }
 
 // the first stage is unique.
@@ -49,15 +51,17 @@ static tl_smp first_stage(tl_UDS_node *x, int iter){
   tl_smp out;
   tl_smp alpha = k_cutoff->outlet->smps[iter];
   tl_smp res = k_res->outlet->smps[iter];
-  
+  tl_smp sat = k_sat->outlet->smps[iter];
+  tl_smp satinv = 1.0/sat;  
   // printf("%f\n", solver->inlets[0]->smps[iter]); 
-  out = alpha *
-    // solver inlet
-    clip(solver->inlets[0]->smps[iter] -
-  	 // last stage * resonance
-  	 res * *x->data_in[0] -
-  	 // current state
-  	 *x->data_in[1]);
+  out = alpha * (
+		 // solver inlet
+		 clip(solver->inlets[0]->smps[iter] -
+		      // last stage * resonance
+		      res * *x->data_in[0], sat, satinv) -
+		 // current state
+		 clip(*x->data_in[1], sat, satinv)
+		 );
 
   //out = 0;
   return out;
@@ -69,9 +73,11 @@ static tl_smp stage(tl_UDS_node *x, int iter){
 
   tl_smp out;
   tl_smp alpha = k_cutoff->outlet->smps[iter];
+  tl_smp sat = k_sat->outlet->smps[iter];
+  tl_smp satinv = 1.0/sat;  
 
 
-  out = alpha * clip(*x->data_in[0] - *x->data_in[1]);
+  out = alpha * (clip(*x->data_in[0],sat, satinv) - clip(*x->data_in[1],sat, satinv));
   /* out = 0; */
   return out;
 
@@ -140,6 +146,11 @@ void tl_init_moog(tl_arglist *args){
   k_res = init_ctl(TL_LIN_CTL);
   k_res->name = name_new("resonance");
   install_onto_ctl_list(ctls, k_res);
+
+  k_sat = init_ctl(TL_LIN_CTL);
+  k_sat->name = name_new("saturation");
+  set_ctl_val(k_sat, 1.0);
+  install_onto_ctl_list(ctls, k_sat);
 
   // hook up to dac
   dac->inlets[0] = solver->outlets[0];
