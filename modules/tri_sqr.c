@@ -11,7 +11,7 @@ static tl_UDS_solver *solver;
 static tl_dac *dac;
 static tl_UDS_node *node_sqr;
 static tl_UDS_node *node_tri;
-static tl_ctl *k_freq, *k_skew, *k_tanh_g, *k_reset;
+static tl_ctl *k_freq, *k_skew, *k_tanh_g, *k_thresh, *k_reset;
 static tl_smp inv_cap = -100000.0;
 static tl_smp tri_thresh = .99;
 static tl_smp tanh_gain = 50.0;
@@ -66,12 +66,11 @@ tl_smp tri(tl_UDS_node *x, int iter){
   // grab the appropriate control value for this iteration
   freq = k_freq->outlet->smps[iter];
   skew = k_skew->outlet->smps[iter];
-  tanh_g = k_tanh_g->outlet->smps[iter];
+  tanh_gain = k_tanh_g->outlet->smps[iter];
+  tri_thresh = k_thresh->outlet->smps[iter];
 
-  // do the function
-  out = tanh_clip(*x->data_in[0], tanh_g)*4*find_slope(freq, skew, slp_dir);
-  //out = tanh_clip(*x->data_in[0], 1.0)*4*440;
-  //  printf("tri in %f out %f freq %f skew %f tanh_g %f\n", *x->data_in[0], out, freq, skew, tanh_g);
+
+  out = tanh_clip(*x->data_in[0], tanh_gain)*4*find_slope(freq, skew, slp_dir);
   return out;
 }
 
@@ -153,15 +152,20 @@ void tl_init_tri_sqr(tl_arglist *args){
 
   k_tanh_g = init_ctl(TL_LIN_CTL);
   k_tanh_g->name = name_new("tanh_g");
-  set_ctl_val(k_tanh_g, 50);
+  set_ctl_val(k_tanh_g, 1);
+
+  k_thresh = init_ctl(TL_LIN_CTL);
+  k_thresh->name = name_new("thresh");
+  set_ctl_val(k_thresh, tri_thresh);
 
   k_freq->next = k_skew; 
   k_skew->next = k_tanh_g;
+  k_tanh_g->next = k_thresh;
 
   k_reset = init_ctl(TL_BANG_CTL);
   k_reset->name = name_new("reset_oscs");
   k_reset->bang_func = reset_oscs;
-  k_tanh_g->next = k_reset;
+  k_thresh->next = k_reset;
 
 }
 

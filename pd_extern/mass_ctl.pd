@@ -1,0 +1,9 @@
+#N canvas 5 83 787 541 10;
+#X obj 146 32 inlet;
+#X floatatom 166 173 5 0 0 0 - - -, f 5;
+#X obj 166 192 * 0.01;
+#X obj 148 245 s tl_ctl;
+#X msg 162 218 tl 18 \$1;
+#X connect 1 0 2 0;
+#X connect 2 0 4 0;
+#X connect 4 0 3 0;

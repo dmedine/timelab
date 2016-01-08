@@ -161,8 +161,8 @@ static void *timelab_tilde_new(t_symbol *s, int argc, t_atom *argv){
   x->procession = init_procession();
  
   // initialize the empty signal 
-  tl_kill_empty_sig(); // make sure it's dead
-  tl_init_empty_sig();
+  // tl_kill_empty_sig(); // make sure it's dead
+  // tl_init_empty_sig();
 
   // load the requested module
   t_symbol *mod_arg = atom_getsymbolarg(0,argc,argv);

@@ -252,7 +252,7 @@ int pa_is_streaming(void){return pa_streaming;}
 
 
 
-inline void pa_push_out(tl_smp *output_buff){
+inline extern void pa_push_out(tl_smp *output_buff){
 
 
   // these could be optimized out:

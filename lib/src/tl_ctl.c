@@ -94,7 +94,7 @@ void set_ctl_val(tl_ctl *x, tl_smp val){
 
 }
 
-inline void interpolate_ctl_val(tl_ctl *x, tl_lvl_stck *lvl_stck){
+inline extern void interpolate_ctl_val(tl_ctl *x, tl_lvl_stck *lvl_stck){
 
   tl_smp diff;
   tl_smp inc;
@@ -142,7 +142,7 @@ inline void interpolate_ctl_val(tl_ctl *x, tl_lvl_stck *lvl_stck){
     }
 }
 
-inline void process_ctl_list(tl_ctl *head, tl_lvl_stck *lvl_stck){
+inline extern void process_ctl_list(tl_ctl *head, tl_lvl_stck *lvl_stck){
 
   tl_ctl *x = head;
   //  pthread_mutex_lock(&ctl_lock);
@@ -230,7 +230,7 @@ void kill_lvl_stck(tl_lvl_stck *x){
 
 }
 
-inline void push_lvl_stck(tl_lvl_stck *x, tl_ctl *y){
+inline extern void push_lvl_stck(tl_lvl_stck *x, tl_ctl *y){
 
   if(x!=NULL)
     {
@@ -257,7 +257,7 @@ inline void push_lvl_stck(tl_lvl_stck *x, tl_ctl *y){
 
 }
 
-inline tl_ctl *pop_lvl_stck(tl_lvl_stck *x){
+inline extern tl_ctl *pop_lvl_stck(tl_lvl_stck *x){
 
   if(x->top<0)
     {
@@ -275,7 +275,7 @@ void flush_lvl_stck(tl_lvl_stck *x){
 
 }
 
-inline void process_lvl_stck(tl_lvl_stck *x){
+inline extern void process_lvl_stck(tl_lvl_stck *x){
 
   tl_ctl *y;
   if(x!=NULL)

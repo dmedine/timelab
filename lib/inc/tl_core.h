@@ -60,17 +60,17 @@ extern "C" {
   void kill_inlets(tl_sig **x);
 
   // utilities for manipulatign signals
-  inline void set_sig_vals(tl_sig *x, tl_smp val);
-  inline void scale_sig_vals(tl_sig *x, tl_smp *scalar);
+  inline extern void set_sig_vals(tl_sig *x, tl_smp val);
+  inline extern void scale_sig_vals(tl_sig *x, tl_smp *scalar);
   // should scalar be a vector perhaps?
-  inline void multiply_sigs(tl_sig *x, tl_sig *y);
-  inline void divide_sigs(tl_sig *x, tl_sig *y);
-  inline void add_sigs(tl_sig *x, tl_sig *y);
-  inline void subtract_sigs(tl_sig *x, tl_sig *y);
-  inline void copy_sigs(tl_sig *x, tl_sig *y);
-  inline void zero_out_sig(tl_sig *x);
+  inline extern void multiply_sigs(tl_sig *x, tl_sig *y);
+  inline extern void divide_sigs(tl_sig *x, tl_sig *y);
+  inline extern void add_sigs(tl_sig *x, tl_sig *y);
+  inline extern void subtract_sigs(tl_sig *x, tl_sig *y);
+  inline extern void copy_sigs(tl_sig *x, tl_sig *y);
+  inline extern void zero_out_sig(tl_sig *x);
   
-  static tl_sig  *tl_g_empty_sig;
+  static tl_sig *tl_g_empty_sig;
   void tl_init_empty_sig(void);
   tl_sig *tl_get_empty_sig(void);
   void tl_kill_empty_sig(void);
@@ -178,7 +178,7 @@ extern "C" {
   // move class x immediately after class y
   void  tl_move_class(tl_class *x, tl_class *y);
   // move through the class list and process the dsp functions
-  inline void tl_process_dsp_list(int samples, tl_class *x);
+  inline extern void tl_process_dsp_list(int samples, tl_class *x);
   // move through the list and destory all classes
   void tl_process_kill_list(tl_class *x); // kills the classes as well
   
@@ -238,8 +238,14 @@ extern "C" {
   // utility function
   // NOTE bad nomenclature
   void set_ctl_val(tl_ctl *x, tl_smp val);
-  
   void install_onto_ctl_list(tl_ctl *head, tl_ctl *x);
+  /* // combine the above */
+  /* void init_ctl_full(tl_ctl *head, */
+  /* 		     tl_ctl *x, */
+  /* 		     tl_smp val, */
+  /* 		     int TYPE, */
+  /* 		     char *buff); */
+
   
   static tl_ctl *tl_g_ctl_head;
   void set_g_ctl_head(tl_ctl *x);
@@ -256,22 +262,22 @@ extern "C" {
     
   }tl_lvl_stck;
   
-  inline void interpolate_ctl_val(tl_ctl *x, tl_lvl_stck *lvl_stck);
+  inline extern void interpolate_ctl_val(tl_ctl *x, tl_lvl_stck *lvl_stck);
 
   // needs to be intialized
   static tl_lvl_stck *tl_g_lvl_stck;
   tl_lvl_stck *init_lvl_stck(void);
   void kill_lvl_stck(tl_lvl_stck *x);
-  inline void push_lvl_stck(tl_lvl_stck *x, tl_ctl *y);
-  inline tl_ctl *pop_lvl_stck(tl_lvl_stck *x);
+  inline extern void push_lvl_stck(tl_lvl_stck *x, tl_ctl *y);
+  inline extern tl_ctl *pop_lvl_stck(tl_lvl_stck *x);
   void flush_lvl_stck(tl_lvl_stck *x);
-  inline void process_lvl_stck(tl_lvl_stck *x);
+  inline extern void process_lvl_stck(tl_lvl_stck *x);
   
   void set_g_lvl_stck(tl_lvl_stck *x);
-  inline tl_lvl_stck * get_g_lvl_stck(void);
+  inline extern tl_lvl_stck * get_g_lvl_stck(void);
 
   // this belongs above, but we hadn't defined tl_lvl_stck yet
-  inline void process_ctl_list(tl_ctl *head, tl_lvl_stck *lvl_stck);
+  inline extern void process_ctl_list(tl_ctl *head, tl_lvl_stck *lvl_stck);
 
   //*************************//
   //      global audio       //

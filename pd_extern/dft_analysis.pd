@@ -1,5 +1,5 @@
-#N canvas 502 84 853 670 10;
-#N canvas 591 114 573 580 analysis 0;
+#N canvas 500 82 853 670 10;
+#N canvas 589 112 573 580 analysis 1;
 #X obj 47 166 *~;
 #X obj 14 99 inlet~;
 #X obj 15 218 rfft~;
@@ -105,7 +105,7 @@
 #X obj 245 141 bang~;
 #X obj 239 164 snapshot~;
 #X floatatom 238 212 80 0 0 0 - - -, f 80;
-#X obj 15 378 /~ 512;
+#X obj 15 378 /~ 256;
 #X connect 0 0 2 0;
 #X connect 1 0 0 0;
 #X connect 2 0 4 0;

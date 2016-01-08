@@ -1,3 +1,12 @@
+// solves a string consistint of N
+// harmonic oscillators as a pair of differential equations
+// x_dot = fy
+// y_dot = fx
+// where f is the desired frequency * 2PI
+
+// control input is an array of N values giving an intial
+// 'pluck' displacement of the string
+
 #include "tl_core.h"
 #include "m_modules.h"
 

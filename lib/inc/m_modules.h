@@ -27,10 +27,10 @@ extern "C" {
     
   }tl_adc;
 
-  inline void tl_dsp_adc(int samples, void *mod);
+  inline extern void tl_dsp_adc(int samples, void *mod);
   // this is special because there is only one dac
-  tl_adc *tl_init_adc(tl_procession *procession, int in_cnt, int up);
-  void tl_kill_adc(tl_adc *x);
+  extern tl_adc *tl_init_adc(tl_procession *procession, int in_cnt, int up);
+  extern void tl_kill_adc(tl_adc *x);
 
     //*************//
     //     DAC     //
@@ -52,10 +52,10 @@ extern "C" {
     
   }tl_dac;
   
-  inline void tl_dsp_dac(int samples, void *mod);
+  inline extern void tl_dsp_dac(int samples, void *mod);
   // this is special because there is only one dac
-  tl_dac *tl_init_dac(tl_procession *procession, int in_cnt, int up);
-  void tl_kill_dac(tl_dac *x);
+  extern tl_dac *tl_init_dac(tl_procession *procession, int in_cnt, int up);
+  extern void tl_kill_dac(tl_dac *x);
 
   
   
@@ -82,10 +82,10 @@ extern "C" {
     
   }tl_table;
   
-  inline void tl_dsp_table(int samples, void *mod);
-  void create_table_array(tl_table *x);
-  void tl_kill_table(void *mod);
-  void *tl_init_table(int table_len, int up);
+  inline extern void tl_dsp_table(int samples, void *mod);
+  extern void create_table_array(tl_table *x);
+  extern void tl_kill_table(void *mod);
+  extern void *tl_init_table(int table_len, int up);
   //tl_class *tl_init_setup(void);
   
   //****************//
@@ -113,9 +113,9 @@ extern "C" {
     
   }tl_lookup;
   
-  inline void tl_dsp_lookup(int samples, void *mod);
-  void *tl_init_lookup(int up);
-  void tl_kill_lookup(void *mod);
+  inline extern void tl_dsp_lookup(int samples, void *mod);
+  extern void *tl_init_lookup(int up);
+  extern void tl_kill_lookup(void *mod);
 
   //********************//
   //     UDS solver     //
@@ -156,11 +156,11 @@ extern "C" {
 
 
   // 'constructor' and 'destructor'
-  tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int up);
-  void tl_reset_UDS_node(tl_UDS_node *x, tl_smp state);
-  void tl_push_UDS_node(tl_UDS_node *x, tl_UDS_node *y);
-  void tl_kill_UDS_node(tl_UDS_node *x);
-  void tl_kill_UDS_net(tl_UDS_node *x);
+  extern tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int up);
+  extern void tl_reset_UDS_node(tl_UDS_node *x, tl_smp state);
+  extern void tl_push_UDS_node(tl_UDS_node *x, tl_UDS_node *y);
+  extern void tl_kill_UDS_node(tl_UDS_node *x);
+  extern void tl_kill_UDS_net(tl_UDS_node *x);
 
   // dysolver module
   typedef struct _UDS_solver {
@@ -182,9 +182,9 @@ extern "C" {
 
   }tl_UDS_solver;
 
-  void tl_dsp_UDS_solver(int samples, void *mod);
-  void *tl_init_UDS_solver(int ins, int outs, int up);
-  void tl_kill_UDS_solver(void *mod);
+  extern void tl_dsp_UDS_solver(int samples, void *mod);
+  extern void *tl_init_UDS_solver(int ins, int outs, int up);
+  extern void tl_kill_UDS_solver(void *mod);
 
   
   //**********************//

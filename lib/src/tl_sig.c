@@ -97,7 +97,7 @@ void kill_inlets(tl_sig **x){
 
 }
 
-inline void set_sig_vals(tl_sig *x, tl_smp val){
+inline extern void set_sig_vals(tl_sig *x, tl_smp val){
 
   int i;
   for(i=0; i<x->smp_cnt; i++)
@@ -105,7 +105,7 @@ inline void set_sig_vals(tl_sig *x, tl_smp val){
 
 }
 
-inline void scale_sig_vals(tl_sig *x, tl_smp *scalar){
+inline extern void scale_sig_vals(tl_sig *x, tl_smp *scalar){
 
   int i;
 
@@ -118,7 +118,7 @@ inline void scale_sig_vals(tl_sig *x, tl_smp *scalar){
     }
 }
 
-inline void multiply_sigs(tl_sig *x, tl_sig *y){
+inline extern void multiply_sigs(tl_sig *x, tl_sig *y){
 
   int i;
   if(x->smp_cnt != y->smp_cnt)
@@ -136,7 +136,7 @@ inline void multiply_sigs(tl_sig *x, tl_sig *y){
     }
 }
 
-inline void divide_sigs(tl_sig *x, tl_sig *y){
+inline extern void divide_sigs(tl_sig *x, tl_sig *y){
 
   int i;
   if(x->smp_cnt != y->smp_cnt)
@@ -149,7 +149,7 @@ inline void divide_sigs(tl_sig *x, tl_sig *y){
     x->smps[i]/=y->smps[i];
 }
 
-inline void add_sigs(tl_sig *x, tl_sig *y){
+inline extern void add_sigs(tl_sig *x, tl_sig *y){
 
   int i;
   if(x->smp_cnt != y->smp_cnt)
@@ -162,7 +162,7 @@ inline void add_sigs(tl_sig *x, tl_sig *y){
     x->smps[i]+=y->smps[i];
 }
 
-inline void subtract_sigs(tl_sig *x, tl_sig *y){
+inline extern void subtract_sigs(tl_sig *x, tl_sig *y){
 
   int i;
   if(x->smp_cnt != y->smp_cnt)
@@ -175,7 +175,7 @@ inline void subtract_sigs(tl_sig *x, tl_sig *y){
     x->smps[i]-=y->smps[i];
 }
 
-inline void zero_out_sig(tl_sig *x){
+inline extern void zero_out_sig(tl_sig *x){
 
   int i;
   for(i=0; i<x->smp_cnt; i++)

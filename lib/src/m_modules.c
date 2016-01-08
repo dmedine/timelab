@@ -5,7 +5,7 @@
     //*************//
     //     ADC     //
     //*************//
-inline void tl_dsp_adc(int samples, void *mod){
+inline extern void tl_dsp_adc(int samples, void *mod){
 
   int i,s, j, buff_pos=0;
   tl_adc *x = (tl_adc *)mod;
@@ -26,7 +26,7 @@ inline void tl_dsp_adc(int samples, void *mod){
 
 }
 
-tl_adc *tl_init_adc(tl_procession *procession, int out_cnt, int up){
+extern tl_adc *tl_init_adc(tl_procession *procession, int out_cnt, int up){
 
   printf("creating adc...\n");
   tl_adc *x;
@@ -44,7 +44,7 @@ tl_adc *tl_init_adc(tl_procession *procession, int out_cnt, int up){
 
 }
 
-void tl_kill_adc(tl_adc *x){
+extern void tl_kill_adc(tl_adc *x){
   
   
   if(x!=NULL)
@@ -64,7 +64,7 @@ void tl_kill_adc(tl_adc *x){
     //*************//
 
 
-inline void tl_dsp_dac(int samples, void *mod){
+inline extern void tl_dsp_dac(int samples, void *mod){
 
   //  printf("in the dac... %d\n", samples);
   int i,s, j, buff_pos=0;
@@ -87,7 +87,7 @@ inline void tl_dsp_dac(int samples, void *mod){
 
 }
 
-tl_dac *tl_init_dac(tl_procession *procession, int in_cnt, int up){
+extern tl_dac *tl_init_dac(tl_procession *procession, int in_cnt, int up){
 
   printf("creating dac...\n");
 
@@ -109,7 +109,7 @@ tl_dac *tl_init_dac(tl_procession *procession, int in_cnt, int up){
 
 }
 
-void tl_kill_dac(tl_dac *x){
+extern void tl_kill_dac(tl_dac *x){
   
   
   if(x!=NULL)
@@ -131,7 +131,7 @@ void tl_kill_dac(tl_dac *x){
     //     table     //
     //***************//
 
-inline void tl_dsp_table(int samples, void *mod){
+inline extern void tl_dsp_table(int samples, void *mod){
   
   int s, i;
   tl_table *x = (tl_table *)mod;
@@ -145,7 +145,7 @@ inline void tl_dsp_table(int samples, void *mod){
 
 }
 
-void *tl_init_table(int table_len, int up){
+extern void *tl_init_table(int table_len, int up){
 
 
   tl_table *x = (tl_table *)malloc(sizeof(tl_table));
@@ -168,7 +168,7 @@ void *tl_init_table(int table_len, int up){
 }
 
 
-void create_table_array(tl_table *x){
+extern void create_table_array(tl_table *x){
 
   int i;
   tl_smp inc, val;
@@ -185,7 +185,7 @@ void create_table_array(tl_table *x){
 
 }
 
-void tl_kill_table(void *mod){
+extern void tl_kill_table(void *mod){
 
   tl_table *x = (tl_table *)mod;
 
@@ -211,7 +211,7 @@ void tl_kill_table(void *mod){
     //     lookup     //
     //****************//
 
-inline void tl_dsp_lookup(int samples, void *mod){
+inline extern void tl_dsp_lookup(int samples, void *mod){
 
   tl_lookup *x = (tl_lookup *)mod;
   int s = samples * x->up;
@@ -239,7 +239,7 @@ inline void tl_dsp_lookup(int samples, void *mod){
     }
 }
 
-void *tl_init_lookup(int up){
+extern void *tl_init_lookup(int up){
 
   tl_lookup *x = (tl_lookup *)malloc(sizeof(tl_lookup));
 
@@ -266,7 +266,7 @@ void *tl_init_lookup(int up){
 
 }
 
-void tl_kill_lookup(void *mod){
+extern void tl_kill_lookup(void *mod){
 
   tl_lookup *x = (tl_lookup *)mod;
   if(x!=NULL)
@@ -292,7 +292,7 @@ void tl_kill_lookup(void *mod){
 // all of this is hardcoded for Runge-Kutta
 // in future, add more solver options
 
-tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int up){
+extern tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int up){
 
   int i;
 
@@ -321,7 +321,7 @@ tl_UDS_node *tl_init_UDS_node(tl_dyfunc func, int in_cnt, int up){
 
 }
 
-void tl_reset_UDS_node(tl_UDS_node *x, tl_smp state){
+extern void tl_reset_UDS_node(tl_UDS_node *x, tl_smp state){
 
   int i, j, k;
   x->state = state;
@@ -334,14 +334,14 @@ void tl_reset_UDS_node(tl_UDS_node *x, tl_smp state){
 
 // theoretically, the order doesn't matter 
 // so we can just push and pop at will
-void tl_push_UDS_node(tl_UDS_node *x, tl_UDS_node *y){
+extern void tl_push_UDS_node(tl_UDS_node *x, tl_UDS_node *y){
 
   while(x->next!=NULL)x=x->next;
   x->next = y;
     
 }
 
-void tl_kill_UDS_node(tl_UDS_node *x){
+extern void tl_kill_UDS_node(tl_UDS_node *x){
   
   int i;
 
@@ -370,7 +370,7 @@ void tl_kill_UDS_node(tl_UDS_node *x){
 
 }
 
-void tl_kill_UDS_net(tl_UDS_node *x){
+extern void tl_kill_UDS_net(tl_UDS_node *x){
 
   tl_UDS_node *y = x->next;
   if(x!=NULL)tl_kill_UDS_node(x);
@@ -388,7 +388,7 @@ void tl_kill_UDS_net(tl_UDS_node *x){
 
 
 // again, hardcoded for Runge-Kutta
-void tl_dsp_UDS_solver(int samples, void *mod){
+extern void tl_dsp_UDS_solver(int samples, void *mod){
 
   int i, j, k;
   tl_UDS_solver *x = (tl_UDS_solver *)mod;
@@ -446,7 +446,7 @@ void tl_dsp_UDS_solver(int samples, void *mod){
 }
 
 
-void *tl_init_UDS_solver(int ins, int outs, int up){
+extern void *tl_init_UDS_solver(int ins, int outs, int up){
 
   tl_UDS_solver *x = malloc(sizeof(tl_UDS_solver));
   x->UDS_net = tl_init_UDS_node(NULL, 0, 1);//0, 1);
@@ -470,7 +470,7 @@ void *tl_init_UDS_solver(int ins, int outs, int up){
   return x;
 }
 
-void tl_kill_UDS_solver(void *mod){
+extern void tl_kill_UDS_solver(void *mod){
 
   tl_UDS_solver *x = (tl_UDS_solver *)mod;
   tl_kill_UDS_net(x->UDS_net);

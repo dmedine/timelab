@@ -1,0 +1,8 @@
+#N canvas 11 83 592 300 10;
+#X obj 46 84 chua;
+#X obj 46 108 dac~;
+#X obj 94 100 dft_analysis;
+#X obj 387 39 bang~;
+#X connect 0 0 1 0;
+#X connect 0 0 2 0;
+#X connect 3 0 2 1;

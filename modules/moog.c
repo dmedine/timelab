@@ -95,8 +95,8 @@ void tl_init_moog(tl_arglist *args){
   else procession = args->argv[0]->procession;
 
   // initialize solver:
-  solver = tl_init_UDS_solver(0, // ins 
-			      4, // at least number of nodes
+  solver = tl_init_UDS_solver(1, // ins 
+			      4, // outs, at least number of nodes
 			      1); // upsampling (not yet implemented)
 
   // dac:
@@ -153,7 +153,7 @@ void tl_init_moog(tl_arglist *args){
   install_onto_ctl_list(ctls, k_sat);
 
   // hook up to dac
-  dac->inlets[0] = solver->outlets[0];
+  dac->inlets[0] = solver->outlets[3];
 
 
 }

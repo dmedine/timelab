@@ -55,7 +55,7 @@ extern "C" {
   
   // this is the function that delivers samples to 
   // the hardware DAC
-  inline void pa_push_out(tl_smp *output_buff);
+  inline extern void pa_push_out(tl_smp *output_buff);
   
   
 #ifdef __cplusplus

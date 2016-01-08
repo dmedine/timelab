@@ -1,3 +1,8 @@
+// solves a harmonic oscillator as a pair of differential equations
+// x_dot = fy
+// y_dot = fx
+// where f is the desired frequency * 2PI
+
 #include "tl_core.h"
 #include "m_modules.h"
 
@@ -5,6 +10,10 @@ static tl_UDS_solver *solver;
 static tl_UDS_node *node_x;
 static tl_UDS_node *node_y;
 static tl_dac *dac;
+// needed for external loaders
+const int in_cnt = 0;
+const int out_cnt = 2;
+static tl_ctl *ctl_head;
 
 tl_smp x_dot(tl_UDS_node *x, int iter){
 
@@ -37,18 +46,20 @@ void tl_init_dyfunc_test(tl_arglist *args){
     }
   else procession = args->argv[0]->procession;
 
+  ctl_head = init_ctl(TL_HEAD_CTL);
+
   solver = tl_init_UDS_solver(0, 
 			      2, 
 			      1);
 
   node_x = tl_init_UDS_node(x_dot, 
-			    0,
+			    1,
 			    1);
 
   tl_reset_UDS_node(node_x, 0.0);
 
   node_y = tl_init_UDS_node(y_dot, 
-			    0,
+			    1,
 			    1);
 
   tl_reset_UDS_node(node_y, -1.0);
@@ -66,6 +77,10 @@ void tl_init_dyfunc_test(tl_arglist *args){
   dac->inlets[0] = solver->outlets[0];
   dac->inlets[1] = solver->outlets[1];
 
+}
+
+tl_ctl *tl_reveal_ctls_dyfunc_test(void){
+  return ctl_head;
 }
 
 void tl_kill_dyfunc_test(tl_class *class_ptr){

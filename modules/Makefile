@@ -23,8 +23,9 @@ LIBS  =-ltimelab
  .SUFFIXES: .tl
 
  CFLAGS = -funroll-loops -fomit-frame-pointer -fPIC \
-     -Wall -W -Wshadow -Wstrict-prototypes \
-     -Wno-unused -Wno-parentheses -Wno-switch
+	-Wall -W -Wshadow -Wstrict-prototypes #\	
+#     -Wno-unused -Wno-parentheses -Wno-switch 
+#     -Wl,-export_dynamic	
 
 debug: $(CFLAGS) += -DDEBUG -O0
 debug: current
@@ -34,7 +35,7 @@ release: current
 
 .c.tl:	 
 	$(CC) -g -o $*.o  $(CFLAGS) $(INCLUDE) -c $*.c
-	ld -export_dynamic  -shared -o $*.tl $*.o $(LIBS) \
+	ld -shared -o $*.tl $*.o $(LIBS) \
 	$(LIBPATH) $(LIBS) -lc -lm 
 	#strip --strip-unneeded $*.tl 
  clean:
